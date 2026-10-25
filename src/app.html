@@ -110,8 +110,8 @@ footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center
   <header class="app-head">
     <div class="brand">
       <div class="tag">馬Sir教室 · 蘇格拉底解題引導</div>
-      <h1>影相／貼題 → 分步提示</h1>
-      <div class="sub">唔直接出完整答案 · 唔收集姓名／成績 · 公式會正確顯示</div>
+      <h1>拍照／貼題 → 分步提示</h1>
+      <div class="sub">不直接顯示完整答案 · 不收集姓名／成績 · 公式會正確顯示</div>
     </div>
     <span class="badge" id="modeBadge">學生練習版</span>
   </header>
@@ -120,37 +120,37 @@ footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center
   <div id="screenHome" class="screen active">
 
     <section class="card" id="studentIntro" style="margin-bottom:14px">
-      <h2>呢個網站點用？</h2>
-      <p class="note">呢度係<strong>蘇格拉底解題引導</strong>：影相或貼題之後，會一次俾你<strong>一條提示／問題</strong>，幫你自己諗，而唔係一次出晒完整答案。適合堂上練習同屋企溫習；唔會收集姓名同成績。</p>
+      <h2>本網站使用說明</h2>
+      <p class="note">這裏是<strong>蘇格拉底解題引導</strong>：拍照或貼上題目後，每次會給你<strong>一條提示／問題</strong>，幫助你自行思考，而不是一次給出完整答案。適合課堂練習與家中溫習；不會收集姓名與成績。</p>
       <ol class="note" style="margin:10px 0 0 1.2em;padding:0;line-height:1.65">
-        <li><strong>想先熟流程：</strong>撳左邊一條<strong>示範題</strong>，跟住答每條提示。</li>
-        <li><strong>有自己嘅題：</strong>右邊上載題目相片（可再貼少少文字）→ 撳<strong>影相引導</strong>。</li>
-        <li><strong>得文字、無相：</strong>喺文字框貼題 → 撳<strong>開始引導</strong>。</li>
-        <li>卡住可以要再細啲嘅提示；完整解法預設收起，試過之後先開。</li>
+        <li><strong>想先熟悉流程：</strong>點選左邊一條<strong>示範題</strong>，接著回答每條提示。</li>
+        <li><strong>有自己的題目：</strong>在右邊上載題目相片（可再貼上少許文字）→ 按<strong>拍照引導</strong>。</li>
+        <li><strong>只有文字、沒有相片：</strong>在文字框貼上題目 → 按<strong>開始引導</strong>。</li>
+        <li>卡住時可以索取更細的提示；完整解法預設收起，試過之後再開啟。</li>
       </ol>
     </section>
         <div class="banner ok" id="topBanner" hidden></div>
     <div class="grid">
       <section class="card">
         <h2>① 示範題（先試流程）</h2>
-        <p class="note">揀一條內建 DSE 風格題，跟住提示一步步答；唔使影相都可以練。</p>
+        <p class="note">選一條內建 DSE 風格題目，跟著提示一步一步作答；不必拍照亦可練習。</p>
         <div class="demo-list" id="demoList"></div>
       </section>
       <section class="card">
-        <h2>② 影相／貼題（自己嘅題）</h2>
-        <p class="note">上載題目相（可選再貼文字補充）→ 撳「影相引導」→ 跟住答每一條提示。</p>
+        <h2>② 拍照／貼題（自己的題目）</h2>
+        <p class="note">上載題目相片（可選再貼文字補充）→ 按「拍照引導」→ 接著回答每一條提示。</p>
         <label class="drop" id="dropZone">
           <input type="file" id="photoInput" accept="image/*">
-          <div><strong>撳呢度上載題目相片</strong></div>
+          <div><strong>按這裏上載題目相片</strong></div>
           <div class="note">支援 JPG／PNG／WebP</div>
         </label>
         <div class="preview-box" id="photoPreview"><img id="photoImg" alt="題目相片預覽"></div>
         <div class="row">
-          <button type="button" class="btn primary" id="btnStartPhoto">影相引導</button>
+          <button type="button" class="btn primary" id="btnStartPhoto">拍照引導</button>
           <button type="button" class="btn ghost" id="btnClearCustom">清除</button>
         </div>
         <p class="api-status note" id="photoMsg"></p>
-        <h3>或者：只貼題文（無相）</h3>
+        <h3>或者：直接貼上題文（無需相片）</h3>
         <textarea id="pasteText" rows="5" placeholder="例如：解方程 x^2 - 5x + 6 = 0"></textarea>
         <div class="row">
           <button type="button" class="btn" id="btnStartCustom">開始引導</button>
@@ -163,7 +163,7 @@ footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center
   <!-- TUTOR -->
   <div id="screenTutor" class="screen">
     <div class="row" style="margin-bottom:10px">
-      <button type="button" class="btn ghost" id="btnBack">← 返主頁</button>
+      <button type="button" class="btn ghost" id="btnBack">← 返回主頁</button>
       <span class="pill" id="modePill">示範題</span>
       <span class="family" id="familyLabel"></span>
     </div>
@@ -187,28 +187,28 @@ footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center
           <div class="ans-box" id="ansBox"></div>
           <div class="row">
             <button type="button" class="btn primary" id="btnCheck">提交</button>
-            <button type="button" class="btn hint" id="btnHint">再提示一下</button>
-            <button type="button" class="btn ghost" id="btnSkip">我答唔到，下一關</button>
+            <button type="button" class="btn hint" id="btnHint">再給一點提示</button>
+            <button type="button" class="btn ghost" id="btnSkip">我答不到，下一關</button>
           </div>
           <div id="hintLayers"></div>
           <div class="feedback" id="feedback"></div>
         </div>
         <div class="locked" id="lockBox">
           <strong>完整解法已隱藏</strong>
-          <p class="note" style="margin:6px 0 10px">請先自己試。或者撳下面開鎖（或同一關連續失敗 3 次後自動可開）。</p>
-          <button type="button" class="btn warn" id="btnUnlock">我試完先睇</button>
+          <p class="note" style="margin:6px 0 10px">請先自行嘗試。或者按下方開鎖（或同一關連續失敗 3 次後自動可開）。</p>
+          <button type="button" class="btn warn" id="btnUnlock">我試完再看</button>
           <span class="note" id="failNote"></span>
         </div>
         <div class="solution" id="solutionBox">
           <h3>完整解法（示範）</h3>
           <div id="solutionBody"></div>
-          <p class="note" style="margin-top:10px">轉移任務：用同一方法再解一條類似題，或者用自己嘅說話向同學講解關鍵一步。</p>
+          <p class="note" style="margin-top:10px">轉移任務：用同一方法再解一條類似題，或者用自己的話向同學講解關鍵一步。</p>
         </div>
       </section>
     </div>
   </div>
 
-  <footer class="foot">馬Sir教室 · 蘇格拉底解題引導 · 唔收集姓名／成績 · 公式會正確顯示</footer>
+  <footer class="foot">馬Sir教室 · 蘇格拉底解題引導 · 不收集姓名／成績 · 公式會正確顯示</footer>
 </div>
 
 <script>/*KATEX_JS*/</script>
@@ -249,26 +249,26 @@ var DEMOS = [
       '<p>公式：'+mathSpan('x=\\dfrac{-b\\pm\\sqrt{\\Delta}}{2a}=\\dfrac{5\\pm 1}{2}')+'。</p>'+
       '<p>所以 '+mathSpan('x=3')+' 或 '+mathSpan('x=2')+'。</p>',
     steps:[
-      {phase:'ELICIT', q:'呢條方程屬於邊類？你會點寫標準形？', help:'講出「二次方程」同係咪已經係 ax²+bx+c=0。',
+      {phase:'ELICIT', q:'這條方程屬於哪一類？你會怎樣寫成標準形？', help:'說出「二次方程」，以及是否已經是 ax²+bx+c=0。',
         type:'text', accept:['二次','quadratic','ax^2','標準'], selfOk:true,
-        hints:['睇最高次係二次。','寫成 ax²+bx+c=0 嘅形式。','呢條已經係標準形：a=1, b=-5, c=6。'],
-        strategy:'先確認次數同係咪等於零，先至揀公式／因式分解。'},
-      {phase:'PROBE', q:'寫出 a、b、c 嘅值。', help:'格式例如：1, -5, 6',
+        hints:['看最高次是否二次。','寫成 ax²+bx+c=0 的形式。','這條已經是標準形：a=1, b=-5, c=6。'],
+        strategy:'先確認次數以及是否等於零，才選擇公式／因式分解。'},
+      {phase:'PROBE', q:'寫出 a、b、c 的值。', help:'格式例如：1, -5, 6',
         type:'text', accept:['1,-5,6','a=1,b=-5,c=6','1 -5 6'],
-        hints:['a 係 x² 系數。','b 係 x 系數（注意正負）。','a=1，b=−5，c=6。'],
-        strategy:'符號好易錯：−5x 嘅 b 係 −5，唔係 5。'},
-      {phase:'GUIDE', q:'計判別式 Δ = b² − 4ac。Δ 等於幾多？', help:'輸入一個整數。',
+        hints:['a 是 x² 的系數。','b 是 x 的系數（注意正負）。','a=1，b=−5，c=6。'],
+        strategy:'符號容易出錯：−5x 的 b 是 −5，不是 5。'},
+      {phase:'GUIDE', q:'計算判別式 Δ = b² − 4ac。Δ 等於多少？', help:'輸入一個整數。',
         type:'text', accept:['1'],
         hints:['先計 b²。','再減 4ac。','25 − 24 = 1。'],
-        strategy:'Δ>0 → 兩實根；=0 重根；<0 無實根（必修通常停喺呢度）。'},
+        strategy:'Δ>0 → 兩實根；=0 重根；<0 無實根（必修通常停在這裏）。'},
       {phase:'GUIDE', q:'用二次方程公式求兩根。答案寫成「較大,較小」例如 3,2', help:'',
         type:'text', accept:['3,2','2,3','x=3,x=2','x=2,x=3'],
         hints:['公式：x = (−b ± √Δ) / (2a)。','√1 = 1；−b = 5。','(5+1)/2=3；(5−1)/2=2。'],
         strategy:'代入後先簡化分子，再除以 2a。'},
-      {phase:'SYNTH', q:'用一句話總結：點解可以用公式？', help:'自由作答；之後可自評。',
+      {phase:'SYNTH', q:'用一句話總結：為什麼可以用公式？', help:'自由作答；之後可自評。',
         type:'self',
-        hints:['提到「標準形」「Δ」「公式」就够。','例如：寫成標準形後用 Δ 同公式求出兩根。'],
-        strategy:'能講清條件同步驟，先算真正明白。'}
+        hints:['提到「標準形」「Δ」「公式」即可。','例如：寫成標準形後用 Δ 與公式求出兩根。'],
+        strategy:'能講清條件與步驟，才算真正明白。'}
     ]
   },
   {
@@ -281,25 +281,25 @@ var DEMOS = [
       '<p>代入第二式：'+mathSpan('3-y=2\\Rightarrow y=1')+'。</p>'+
       '<p>檢驗第一式：'+mathSpan('2(3)+1=7')+'，正確。解為 '+mathSpan('(x,y)=(3,1)')+'。</p>',
     steps:[
-      {phase:'ELICIT', q:'你打算用邊種方法？代入定加減？', help:'講出方法名即可。',
+      {phase:'ELICIT', q:'你打算用哪一種方法？代入法還是加減法？', help:'說出方法名稱即可。',
         type:'text', accept:['加減','代入','elimination','substitution','消元'], selfOk:true,
-        hints:['兩式都有 y 同 −y，好適合加減消元。','也可以由第二式得 x=y+2 再代入。'],
-        strategy:'先觀察邊個未知數易消。'},
-      {phase:'GUIDE', q:'若用加減法消去 y，x 等於幾多？', help:'輸入整數。',
+        hints:['兩式都有 y 與 −y，很適合加減消元。','也可以由第二式得 x=y+2 再代入。'],
+        strategy:'先觀察哪個未知數較容易消去。'},
+      {phase:'GUIDE', q:'若用加減法消去 y，x 等於多少？', help:'輸入整數。',
         type:'text', accept:['3'],
         hints:['兩式相加：3x = 9。','x = 3。'],
-        strategy:'加減前確認係「同一未知數」系數相反或可倍。'},
+        strategy:'加減前確認是「同一未知數」系數相反或可倍。'},
       {phase:'GUIDE', q:'求出 y。', help:'輸入整數。',
         type:'text', accept:['1'],
         hints:['用 x=3 代入 x−y=2。','3−y=2 → y=1。'],
-        strategy:'求得一未知數後，揀較簡單嗰條代入。'},
+        strategy:'求得一個未知數後，選較簡單的那一條代入。'},
       {phase:'PROBE', q:'檢驗：把 (x,y) 代入第一式，左邊等於？', help:'輸入數值。',
         type:'text', accept:['7'],
         hints:['2(3)+1 = ?','等於 7，同右邊一致。'],
-        strategy:'聯立必檢驗兩式，唔好淨檢一條。'},
-      {phase:'SYNTH', q:'用自己嘅說話講：加減法嘅關鍵一步係咩？', help:'自評即可。',
+        strategy:'聯立必須檢驗兩式，不要只檢查一條。'},
+      {phase:'SYNTH', q:'用自己的話說明：加減法的關鍵一步是什麼？', help:'自評即可。',
         type:'self',
-        hints:['關鍵係令某個未知數系數相反再相加／相減。'],
+        hints:['關鍵是令某個未知數的系數相反，再相加／相減。'],
         strategy:''}
     ]
   },
@@ -313,15 +313,15 @@ var DEMOS = [
       '<p>所以 '+mathSpan('x^{2}+5x+6=(x+2)(x+3)')+'。</p>'+
       '<p>展開檢驗：'+mathSpan('x^{2}+3x+2x+6=x^{2}+5x+6')+'。</p>',
     steps:[
-      {phase:'ELICIT', q:'呢條係邊種因式分解？（十字／公因式／公式…）', help:'',
+      {phase:'ELICIT', q:'這條屬於哪一種因式分解？（十字／公因式／公式…）', help:'',
         type:'text', accept:['十字','交叉','兩數','trinom'], selfOk:true,
         hints:['二次三項式，常用十字相乘法。'],
-        strategy:'先睇有冇公因式，再先十字。'},
-      {phase:'PROBE', q:'要搵兩數，使佢哋嘅「積」同「和」分別係幾多？', help:'格式：積,和 例如 6,5',
+        strategy:'先看有沒有公因式，再考慮十字相乘。'},
+      {phase:'PROBE', q:'要找出兩數，使它們的「積」與「和」分別是多少？', help:'格式：積,和 例如 6,5',
         type:'text', accept:['6,5','積6和5','6 5'],
-        hints:['常數項係積，一次項系數係和。','積 = 6，和 = 5。'],
+        hints:['常數項是積，一次項系數是和。','積 = 6，和 = 5。'],
         strategy:'對 x²+bx+c，找兩數積 c、和 b。'},
-      {phase:'GUIDE', q:'呢兩個數係邊對？', help:'例如 2,3',
+      {phase:'GUIDE', q:'這兩個數是哪一對？', help:'例如 2,3',
         type:'text', accept:['2,3','3,2'],
         hints:['1×6=6 但 1+6=7≠5。','2×3=6 且 2+3=5。'],
         strategy:'逐對試因數，核對和。'},
@@ -329,7 +329,7 @@ var DEMOS = [
         type:'text', accept:['(x+2)(x+3)','(x+3)(x+2)'],
         hints:['寫成 (x+…)(x+…)。','(x+2)(x+3)。'],
         strategy:'最後用展開還原檢驗。'},
-      {phase:'SYNTH', q:'點解要展開檢驗？', help:'自評。',
+      {phase:'SYNTH', q:'為什麼要展開檢驗？', help:'自評。',
         type:'self',
         hints:['防止符號或數字配錯。'],
         strategy:''}
@@ -345,19 +345,19 @@ var DEMOS = [
       '<p>弧 AB 所對圓心角 '+mathSpan('\\angle AOB=100^\\circ')+'，所對圓周角為 '+mathSpan('\\angle ACB')+'。</p>'+
       '<p>故 '+mathSpan('\\angle ACB=50^\\circ')+'。</p>',
     steps:[
-      {phase:'ELICIT', q:'∠AOB 同 ∠ACB 分別係咩角？（圓心角／圓周角）', help:'',
+      {phase:'ELICIT', q:'∠AOB 與 ∠ACB 分別是什麼角？（圓心角／圓周角）', help:'',
         type:'text', accept:['圓心','圓周'], selfOk:true,
         hints:['頂點在圓心 → 圓心角；頂點在圓周 → 圓周角。'],
-        strategy:'先命名角嘅類型，再套定理。'},
-      {phase:'PROBE', q:'兩個角係咪對住同一段弧 AB？', help:'答「是」或「否」。',
+        strategy:'先命名角的類型，再套用定理。'},
+      {phase:'PROBE', q:'兩個角是否對著同一段弧 AB？', help:'答「是」或「否」。',
         type:'text', accept:['是','係','yes','對','同一'],
         hints:['圓心角 AOB 對弧 AB；圓周角 ACB 亦對弧 AB。'],
-        strategy:'「同弧」係用倍角關係嘅前提。'},
-      {phase:'GUIDE', q:'∠ACB 等於幾多度？', help:'輸入數字（唔使°）。',
+        strategy:'「同弧」是使用倍角關係的前提。'},
+      {phase:'GUIDE', q:'∠ACB 等於多少度？', help:'輸入數字（不必加°）。',
         type:'text', accept:['50'],
         hints:['圓周角 = 圓心角 ÷ 2。','100 ÷ 2 = 50。'],
-        strategy:'若 C 在劣弧另一側，要分清對住邊段弧。'},
-      {phase:'SYNTH', q:'用一句話講出呢條定理。', help:'自評。',
+        strategy:'若 C 在劣弧另一側，要分清對著哪一段弧。'},
+      {phase:'SYNTH', q:'用一句話說出這條定理。', help:'自評。',
         type:'self',
         hints:['同弧所對，圓心角是圓周角的兩倍。'],
         strategy:''}
@@ -373,23 +373,23 @@ var DEMOS = [
       '<p>解集：'+mathSpan('\\{x\\in\\mathbb{R}:x>3\\}')+' 或 '+mathSpan('(3,\\infty)')+'。</p>'+
       '<p>注意：兩邊除以正數，不等式方向不變。</p>',
     steps:[
-      {phase:'ELICIT', q:'第一步你會點處理常數項？', help:'',
+      {phase:'ELICIT', q:'第一步你會怎樣處理常數項？', help:'',
         type:'text', accept:['移項','加4','+4','兩邊加'], selfOk:true,
-        hints:['兩邊同時加 4，隔离含 x 項。'],
-        strategy:'不等式移項規則同方程類似。'},
+        hints:['兩邊同時加 4，隔離含 x 的項。'],
+        strategy:'不等式移項規則與方程類似。'},
       {phase:'GUIDE', q:'移項後得到 3x > ?', help:'輸入右邊數值。',
         type:'text', accept:['9'],
         hints:['−4 移到右邊變 +4：5+4=9。'],
         strategy:''},
-      {phase:'PROBE', q:'兩邊除以 3 之後，不等式方向要唔要反轉？點解？', help:'',
+      {phase:'PROBE', q:'兩邊除以 3 之後，不等式方向要不要反轉？為什麼？', help:'',
         type:'text', accept:['不要','唔使','不變','正數','不用'], selfOk:true,
         hints:['除以正數，方向不變；除以負數先要反轉。'],
-        strategy:'呢個係不等式同方程最大分別之一。'},
+        strategy:'這是不等式與方程最大的分別之一。'},
       {phase:'GUIDE', q:'解集係 x ? 3（填 > 或 ≥ 等符號同最終形式，如 x>3）', help:'',
         type:'text', accept:['x>3','x＞3'],
         hints:['3x>9 → x>3。'],
         strategy:''},
-      {phase:'SYNTH', q:'邊種情況要把不等式方向反轉？', help:'自評。',
+      {phase:'SYNTH', q:'哪種情況要把不等式方向反轉？', help:'自評。',
         type:'self',
         hints:['兩邊乘／除負數時。'],
         strategy:''}
@@ -404,15 +404,15 @@ var DEMOS = [
     solutionHtml:'<p>'+mathSpan('(a^{3})^{2}=a^{6}')+'，故 '+mathSpan('a^{6}\\div a^{4}=a^{6-4}=a^{2}')+'。</p>'+
       '<p>用到：'+mathSpan('(a^{m})^{n}=a^{mn}')+' 同 '+mathSpan('a^{m}\\div a^{n}=a^{m-n}')+'。</p>',
     steps:[
-      {phase:'ELICIT', q:'(a³)² 等於 a 嘅幾多次？', help:'輸入指數。',
+      {phase:'ELICIT', q:'(a³)² 等於 a 的幾次方？', help:'輸入指數。',
         type:'text', accept:['6','a^6','a⁶'],
         hints:['乘幂定律：(a^m)^n = a^(mn)。','3×2=6。'],
-        strategy:'先處理括號外嘅指數。'},
-      {phase:'GUIDE', q:'a⁶ ÷ a⁴ = a 嘅幾多次？', help:'輸入指數或 a^?',
+        strategy:'先處理括號外的指數。'},
+      {phase:'GUIDE', q:'a⁶ ÷ a⁴ = a 的幾次方？', help:'輸入指數或 a^?',
         type:'text', accept:['2','a^2','a²'],
         hints:['同底相除，指數相減。','6−4=2。'],
-        strategy:'a≠0 先可以除。'},
-      {phase:'SYNTH', q:'用到邊兩條指數定律？', help:'自評。',
+        strategy:'須 a≠0 才可以相除。'},
+      {phase:'SYNTH', q:'用到哪兩條指數定律？', help:'自評。',
         type:'self',
         hints:['乘幂、同底相除。'],
         strategy:''}
@@ -443,69 +443,69 @@ function classify(text){
 }
 
 function genericSteps(familyId){
-  var commonEnd = {phase:'SYNTH', q:'用自己嘅說話重述正確解法嘅關鍵兩步。之後做一條類似題。', help:'自評即可。', type:'self',
-    hints:['講出「用咗咩定理／公式」同「最後答案點嚟」。'], strategy:'能教曉同學，先算掌握。'};
+  var commonEnd = {phase:'SYNTH', q:'用自己的話重述正確解法的關鍵兩步。之後做一條類似題。', help:'自評即可。', type:'self',
+    hints:['說出「用了什麼定理／公式」與「最後答案從何而來」。'], strategy:'能教會同學，才算掌握。'};
   var map = {
     quad:[
-      {phase:'ELICIT', q:'題目畀咗咩？要求咩？（方程？根？）', help:'先整理已知／未知。', type:'self',
-        hints:['寫出標準形 ax²+bx+c=0。','確認係咪要求實根／判別式。'], strategy:'未寫標準形就唔好套公式。'},
-      {phase:'PROBE', q:'你揀公式、因式分解定配方法？點解？', help:'', type:'self',
-        hints:['易分解就十字；否則公式。'], strategy:''},
-      {phase:'GUIDE', q:'寫出你嘅 a、b、c（或已分解嘅因式）。', help:'自由作答後自評。', type:'self',
-        hints:['注意 b 嘅正負號。'], strategy:''},
-      {phase:'GUIDE', q:'計完 Δ 或因式後，根係邊啲？有冇驗算？', help:'', type:'self',
-        hints:['代返原方程檢查。'], strategy:''},
+      {phase:'ELICIT', q:'題目給了什麼？要求什麼？（方程？根？）', help:'先整理已知／未知。', type:'self',
+        hints:['寫出標準形 ax²+bx+c=0。','確認是否要求實根／判別式。'], strategy:'未寫成標準形就不要套用公式。'},
+      {phase:'PROBE', q:'你選擇公式、因式分解還是配方法？為什麼？', help:'', type:'self',
+        hints:['容易分解就用十字；否則用公式。'], strategy:''},
+      {phase:'GUIDE', q:'寫出你的 a、b、c（或已分解的因式）。', help:'自由作答後自評。', type:'self',
+        hints:['注意 b 的正負號。'], strategy:''},
+      {phase:'GUIDE', q:'算完 Δ 或因式後，根是哪些？有沒有驗算？', help:'', type:'self',
+        hints:['代回原方程檢查。'], strategy:''},
       commonEnd
     ],
     factor:[
-      {phase:'ELICIT', q:'有冇公因式可以先提出？', help:'', type:'self', hints:['先搵各項最大公因式。'], strategy:''},
-      {phase:'PROBE', q:'剩餘部分係邊種（二次三項式／平方差／…）？', help:'', type:'self',
+      {phase:'ELICIT', q:'有沒有公因式可以先提出？', help:'', type:'self', hints:['先找出各項的最大公因式。'], strategy:''},
+      {phase:'PROBE', q:'剩餘部分是哪一種（二次三項式／平方差／…）？', help:'', type:'self',
         hints:['對照常用公式表。'], strategy:''},
-      {phase:'GUIDE', q:'寫出你認為嘅分解結果，並講點檢驗。', help:'', type:'self',
+      {phase:'GUIDE', q:'寫出你認為的分解結果，並說明如何檢驗。', help:'', type:'self',
         hints:['展開還原。'], strategy:''},
       commonEnd
     ],
     sim:[
       {phase:'ELICIT', q:'有幾個未知數、幾條方程？', help:'', type:'self', hints:['二元一次通常兩式兩未知數。'], strategy:''},
-      {phase:'PROBE', q:'你揀代入定加減？邊個未知數較易消？', help:'', type:'self', hints:['系數 ±1 或相反優先。'], strategy:''},
-      {phase:'GUIDE', q:'求出第一個未知數後，下一步係？', help:'', type:'self', hints:['代返較簡單嗰式。'], strategy:''},
-      {phase:'GUIDE', q:'有冇把答案代入兩式檢驗？', help:'', type:'self', hints:['兩式都要滿足。'], strategy:''},
+      {phase:'PROBE', q:'你選擇代入法還是加減法？哪個未知數較易消去？', help:'', type:'self', hints:['系數 ±1 或相反優先。'], strategy:''},
+      {phase:'GUIDE', q:'求出第一個未知數後，下一步是？', help:'', type:'self', hints:['代回較簡單的那一式。'], strategy:''},
+      {phase:'GUIDE', q:'有沒有把答案代入兩式檢驗？', help:'', type:'self', hints:['兩式都要滿足。'], strategy:''},
       commonEnd
     ],
     tri:[
-      {phase:'ELICIT', q:'圖中已知邊／角係咩？要求邊定角？', help:'', type:'self', hints:['標示直角、對邊鄰邊。'], strategy:''},
-      {phase:'PROBE', q:'會用邊條比（sin/cos/tan）定正弦定律／餘弦定律？', help:'', type:'self',
-        hints:['直角三角先用定義比。'], strategy:''},
-      {phase:'GUIDE', q:'列出你嘅方程，再解。注意單位（度）。', help:'', type:'self', hints:['計完睇吓答案係咪合理。'], strategy:''},
+      {phase:'ELICIT', q:'圖中已知的邊／角是什麼？要求邊還是角？', help:'', type:'self', hints:['標示直角、對邊鄰邊。'], strategy:''},
+      {phase:'PROBE', q:'會用哪一條比（sin/cos/tan），還是正弦定律／餘弦定律？', help:'', type:'self',
+        hints:['直角三角形先用定義比。'], strategy:''},
+      {phase:'GUIDE', q:'列出你的方程，再求解。注意單位（度）。', help:'', type:'self', hints:['算完後看看答案是否合理。'], strategy:''},
       commonEnd
     ],
     circle:[
-      {phase:'ELICIT', q:'圖中邊啲係半徑、弦、圓心角、圓周角？', help:'', type:'self', hints:['半徑相等 → 等腰三角形。'], strategy:''},
-      {phase:'PROBE', q:'你會用邊條圓定理？（圓心角兩倍／同弓形／半圓直角…）', help:'', type:'self',
+      {phase:'ELICIT', q:'圖中哪些是半徑、弦、圓心角、圓周角？', help:'', type:'self', hints:['半徑相等 → 等腰三角形。'], strategy:''},
+      {phase:'PROBE', q:'你會用哪一條圓定理？（圓心角兩倍／同弓形／半圓直角…）', help:'', type:'self',
         hints:['確認「同弧」條件。'], strategy:''},
-      {phase:'GUIDE', q:'寫出等量關係，再求未知角／長。', help:'', type:'self', hints:['標弧同角，避免用錯弧。'], strategy:''},
+      {phase:'GUIDE', q:'寫出等量關係，再求未知角／長。', help:'', type:'self', hints:['標示弧與角，避免用錯弧。'], strategy:''},
       commonEnd
     ],
     ineq:[
-      {phase:'ELICIT', q:'係線性定二次不等式？解集要用咩表示？', help:'', type:'self', hints:['留意開／閉區間。'], strategy:''},
-      {phase:'PROBE', q:'有冇需要反轉不等式方向嘅步驟？', help:'', type:'self', hints:['乘除負數先反轉。'], strategy:''},
-      {phase:'GUIDE', q:'寫出解集，並用數線檢查端點包唔包。', help:'', type:'self', hints:['嚴格不等式唔包端點。'], strategy:''},
+      {phase:'ELICIT', q:'是線性還是二次不等式？解集要用什麼表示？', help:'', type:'self', hints:['留意開／閉區間。'], strategy:''},
+      {phase:'PROBE', q:'有沒有需要反轉不等式方向的步驟？', help:'', type:'self', hints:['乘除負數才反轉。'], strategy:''},
+      {phase:'GUIDE', q:'寫出解集，並用數線檢查端點是否包含。', help:'', type:'self', hints:['嚴格不等式不包含端點。'], strategy:''},
       commonEnd
     ],
     index:[
-      {phase:'ELICIT', q:'題目用到邊啲指數定律？底數有冇限制？', help:'', type:'self', hints:['a≠0、根式要注意非負。'], strategy:''},
-      {phase:'GUIDE', q:'先簡化邊部分？寫出中間一步。', help:'', type:'self', hints:['先括號外指數，再同底運算。'], strategy:''},
-      {phase:'GUIDE', q:'最終簡式係咩？可唔可以再化？', help:'', type:'self', hints:['統一正指數或指定形式。'], strategy:''},
+      {phase:'ELICIT', q:'題目用到哪些指數定律？底數有沒有限制？', help:'', type:'self', hints:['a≠0、根式要注意非負。'], strategy:''},
+      {phase:'GUIDE', q:'先簡化哪一部分？寫出中間一步。', help:'', type:'self', hints:['先處理括號外指數，再同底運算。'], strategy:''},
+      {phase:'GUIDE', q:'最終簡式是什麼？可不可以再化簡？', help:'', type:'self', hints:['統一正指數或指定形式。'], strategy:''},
       commonEnd
     ],
     gen:[
-      {phase:'ELICIT', q:'題目已知咩？要求咩？用一句話講。', help:'', type:'self',
-        hints:['劃走關鍵數據同條件。'], strategy:'先分清「求咩」先至揀方法。'},
-      {phase:'PROBE', q:'呢題屬邊個課題？你諗到邊條定義／定理／公式？', help:'', type:'self',
-        hints:['翻筆記課題標題。'], strategy:''},
-      {phase:'GUIDE', q:'寫出你打算嘅第一步（淨係一步）。', help:'', type:'self',
-        hints:['例如：移項、作輔助線、設未知數…'], strategy:'一次淨改一步，方便檢查。'},
-      {phase:'GUIDE', q:'做完第一步後，而家卡喺邊？缺咩條件？', help:'', type:'self',
+      {phase:'ELICIT', q:'題目已知什麼？要求什麼？用一句話說明。', help:'', type:'self',
+        hints:['劃出關鍵數據與條件。'], strategy:'先分清「求什麼」才選擇方法。'},
+      {phase:'PROBE', q:'這題屬於哪個課題？你想到哪一條定義／定理／公式？', help:'', type:'self',
+        hints:['翻查筆記的課題標題。'], strategy:''},
+      {phase:'GUIDE', q:'寫出你打算的第一步（只寫一步）。', help:'', type:'self',
+        hints:['例如：移項、作輔助線、設未知數…'], strategy:'一次只改一步，方便檢查。'},
+      {phase:'GUIDE', q:'做完第一步後，現在卡在哪裏？缺少什麼條件？', help:'', type:'self',
         hints:['對照定義域、單位、圖意。'], strategy:''},
       commonEnd
     ]
@@ -514,9 +514,9 @@ function genericSteps(familyId){
 }
 
 function genericSolution(familyLabel){
-  return '<p>呢題係<strong>自訂題</strong>（分類：'+escapeHtml(familyLabel)+'）。V1 本地引擎唔會自動寫出你條題嘅完整數式解；'+
-    '請跟引導卡逐步完成，或問老師／對照筆記。</p>'+
-    '<p>完整解法位保留俾你自行填寫思路。影相引導要用「影相引導」掣先至出提示。</p>';
+  return '<p>本題是<strong>自訂題</strong>（分類：'+escapeHtml(familyLabel)+'）。V1 本地引擎不會自動寫出你這題的完整數式解；'+
+    '請跟著引導卡逐步完成，或請教老師／對照筆記。</p>'+
+    '<p>完整解法位置保留給你自行填寫思路。拍照引導需按「拍照引導」按鈕才會出現提示。</p>';
 }
 
 /* ========== API base (Worker) — never put Gemini Key here ========== */
@@ -533,7 +533,7 @@ function refreshApiBanner(){
   }else{
     b.hidden = false;
     b.className = 'banner warn';
-    b.innerHTML = '<strong>小提示：</strong>而家請先用左邊<strong>示範題</strong>練習。影相／貼題稍後再用。';
+    b.innerHTML = '<strong>小提示：</strong>請先用左邊<strong>示範題</strong>練習。拍照／貼題稍後再用。';
   }
 }
 
@@ -601,7 +601,7 @@ function startDemo(id){
 function startCustom(){
   var text = $('pasteText').value.trim();
   if(!text){
-    $('classResult').textContent = '請貼上題文。若只有相片，請用「影相引導」。';
+    $('classResult').textContent = '請貼上題文。若只有相片，請用「拍照引導」。';
     return;
   }
   var fam = classify(text);
@@ -612,9 +612,9 @@ function startCustom(){
     problemHtml: '<p>'+escapeHtml(text).replace(/\n/g,'<br>')+'</p>',
     solutionHtml: genericSolution(fam.label),
     steps: genericSteps(fam.id),
-    title: '文字題本地引導 · '+fam.label
+    title: '文字題引導 · '+fam.label
   };
-  $('classResult').textContent = '分類：'+fam.label+'（只用文字引導；有相都只係預覽）';
+  $('classResult').textContent = '分類：'+fam.label+'（僅用文字引導；若有相片亦只作預覽）';
   resetTutor();
 }
 
@@ -652,25 +652,25 @@ async function startPhoto(){
   }
   var base = getApiBase();
   if(!base){
-    $('photoMsg').innerHTML = '<strong>影相引導暫時未得：</strong>'+
-      '請先用左邊<strong>示範題</strong>，或者「文字題本地引導」。'+
+    $('photoMsg').innerHTML = '<strong>拍照引導暫時未能使用：</strong>'+
+      '請先用左邊<strong>示範題</strong>，或者「文字題引導」。'+
       '請先用左邊示範題練習。'+
-      '<br><em>本站唔會用關鍵字假裝睇到你張相。</em>';
+      '<br><em>本站不會用關鍵字假裝已讀取你的相片。</em>';
     $('photoMsg').className = 'api-status banner warn';
     return;
   }
   var text = $('pasteText').value.trim();
   var parts = dataUrlParts(state.photoData);
   state.mode = 'ai';
-  state.family = {id:'ai', label:'影相 AI'};
+  state.family = {id:'ai', label:'拍照 AI'};
   state.history = [];
   state.fails = 0;
   state.unlocked = false;
   state.pack = {
-    problemHtml: text ? ('<p>'+escapeHtml(text).replace(/\n/g,'<br>')+'</p>') : '<p class="note">（以相片為主；可喺下框補充文字）</p>',
-    solutionHtml: '<p>AI 模式完整解法預設隱藏。多次嘗試或你確認試完後先開鎖；即使開鎖，亦建議先對照關鍵一步。</p>',
+    problemHtml: text ? ('<p>'+escapeHtml(text).replace(/\n/g,'<br>')+'</p>') : '<p class="note">（以相片為主；可在下方補充文字）</p>',
+    solutionHtml: '<p>AI 模式完整解法預設隱藏。多次嘗試或你確認試完後再開鎖；即使開鎖，亦建議先對照關鍵一步。</p>',
     steps: [{phase:'ELICIT', q:'載入中…', help:'', type:'self', hints:[], strategy:''}],
-    title: '影相 AI 引導'
+    title: '拍照 AI 引導'
   };
   resetTutor();
   await aiRequest(false);
@@ -682,7 +682,7 @@ async function aiRequest(requestUnlock){
   $('btnCheck').disabled = true;
   $('btnHint').disabled = true;
   $('feedback').className = 'feedback info show';
-  $('feedback').textContent = '正在睇題同產生下一條提示…';
+  $('feedback').textContent = '正在讀取題目並產生下一條提示…';
   try{
     var parts = dataUrlParts(state.photoData);
     var text = $('pasteText') ? $('pasteText').value.trim() : '';
@@ -698,24 +698,24 @@ async function aiRequest(requestUnlock){
     if(!data || !data.ok){
       throw new Error((data && (data.message||data.error)) || 'api_failed');
     }
-    var prompt = data.nextPrompt || '請再講一次你而家諗到邊一步？';
+    var prompt = data.nextPrompt || '請再說明你現在想到哪一步？';
     var phase = data.phase || 'GUIDE';
     state.history.push({role:'assistant', content:prompt});
     state.pack.steps = [{
       phase: phase,
       q: prompt,
-      help: data.strategyHint ? ('策略提示：'+data.strategyHint) : '一次淨答呢一條；唔好要求完整答案。',
+      help: data.strategyHint ? ('策略提示：'+data.strategyHint) : '一次只回答這一條；請勿要求完整答案。',
       type: 'self',
-      hints: data.strategyHint ? [data.strategyHint] : ['試講已知同所求。','寫出你打算嘅下一步（淨係一步）。'],
+      hints: data.strategyHint ? [data.strategyHint] : ['試說明已知與所求。','寫出你打算的下一步（只寫一步）。'],
       strategy: data.strategyHint || ''
     }];
     state.step = 0;
     if(data.allowUnlock){
-      $('failNote').textContent = '而家可以開鎖睇完整解法（仍建議先自己試）。';
+      $('failNote').textContent = '現在可以開鎖查看完整解法（仍建議先自行嘗試）。';
     }
     if(data.done){
       $('feedback').className = 'feedback ok show';
-      $('feedback').textContent = '引導鏈可告一段落；可以開解法對照或返主頁。';
+      $('feedback').textContent = '引導鏈可告一段落；可以開啟解法對照或返回主頁。';
     }
     renderStep();
     // Override self-rate for AI: send student reply then next
@@ -724,9 +724,9 @@ async function aiRequest(requestUnlock){
     var msg = String(e && e.message || e);
     $('feedback').className = 'feedback bad show';
     if(msg === 'no_api'){
-      $('feedback').textContent = '影相引導暫時未得用，請返主頁用示範題。';
+      $('feedback').textContent = '拍照引導暫時未能使用，請返回主頁使用示範題。';
     }else{
-      $('feedback').textContent = '暫時未得：'+msg+'。可返主頁改用示範題。';
+      $('feedback').textContent = '暫時未能完成：'+msg+'。可返回主頁改用示範題。';
     }
     $('btnCheck').disabled = true;
   }finally{
@@ -738,9 +738,9 @@ function wireAiAnswer(lastPrompt){
   var got = $('btnGotIt');
   var notyet = $('btnNotYet');
   if(got){
-    got.textContent = '提交諗法 → 下一提示';
+    got.textContent = '提交想法 → 下一提示';
     got.onclick = function(){
-      var ans = ($('ansInput') && $('ansInput').value || '').trim() || '（學生表示已諗到，繼續）';
+      var ans = ($('ansInput') && $('ansInput').value || '').trim() || '（學生表示已想到，繼續）';
       state.history.push({role:'student', content:ans});
       aiRequest(false);
     };
@@ -749,7 +749,7 @@ function wireAiAnswer(lastPrompt){
     notyet.onclick = function(){
       state.fails++;
       renderProgress();
-      state.history.push({role:'student', content:'仲未明，請再窄啲提示（仍然唔好出完整答案）'});
+      state.history.push({role:'student', content:'仍未明白，請再收窄提示（仍然不要給出完整答案）'});
       revealNextHint();
       aiRequest(false);
     };
@@ -761,7 +761,7 @@ function resetTutor(){
   state.fails = 0;
   state.hintLevel = 0;
   state.unlocked = false;
-  $('modePill').textContent = state.mode==='demo' ? '示範題' : (state.mode==='ai' ? '影相 AI' : '文字本地引導');
+  $('modePill').textContent = state.mode==='demo' ? '示範題' : (state.mode==='ai' ? '拍照 AI' : '文字引導');
   $('familyLabel').textContent = state.family ? (' · '+state.family.label) : '';
   $('probText').innerHTML = state.pack.problemHtml;
   renderMath($('probText'));
@@ -801,12 +801,12 @@ function renderStep(){
   var st = state.pack.steps[state.step];
   if(!st){
     $('phaseLabel').textContent = '完成';
-    $('mainQ').textContent = '你已經行完呢條引導鏈。可以開解法對照，或者返主頁再揀一題。';
+    $('mainQ').textContent = '你已完成這條引導鏈。可以開啟解法對照，或者返回主頁再選一題。';
     $('helpText').textContent = '';
     $('ansBox').innerHTML = '';
     $('hintLayers').innerHTML = '';
     $('feedback').className = 'feedback info show';
-    $('feedback').textContent = '做得好。記得做轉移任務：向同學講解關鍵一步。';
+    $('feedback').textContent = '做得好。記得完成轉移任務：向同學講解關鍵一步。';
     $('btnCheck').disabled = true;
     $('btnHint').disabled = true;
     $('btnSkip').disabled = true;
@@ -833,15 +833,15 @@ function renderStep(){
   });
   var box = $('ansBox');
   if(st.type==='self'){
-    box.innerHTML = '<p class="note">呢關唔自動改卷。寫低你嘅諗法（可選），再自評：</p>'+
-      '<textarea id="ansInput" rows="3" placeholder="可寫你嘅諗法…"></textarea>'+
+    box.innerHTML = '<p class="note">本關不自動批改。可寫下你的想法（選填），再自評：</p>'+
+      '<textarea id="ansInput" rows="3" placeholder="可寫下你的想法…"></textarea>'+
       '<div class="self-rate">'+
-      '<button type="button" class="btn ok" id="btnGotIt">我答到 → 下一關</button>'+
-      '<button type="button" class="btn warn" id="btnNotYet">仲未 · 再提示</button></div>';
+      '<button type="button" class="btn ok" id="btnGotIt">我答得到 → 下一關</button>'+
+      '<button type="button" class="btn warn" id="btnNotYet">仍未 · 再提示</button></div>';
     $('btnGotIt').onclick = function(){ advance(true); };
-    $('btnNotYet').onclick = function(){ onWrong('再諗一諗；可以撳「再提示一下」。', true); };
+    $('btnNotYet').onclick = function(){ onWrong('再想一想；可以按「再給一點提示」。', true); };
   }else{
-    box.innerHTML = '<input type="text" id="ansInput" placeholder="輸入你嘅答案" autocomplete="off">';
+    box.innerHTML = '<input type="text" id="ansInput" placeholder="輸入你的答案" autocomplete="off">';
   }
   renderProgress();
   var inp = $('ansInput');
@@ -853,7 +853,7 @@ function checkAnswer(){
   if(!st) return;
   if(st.type==='self'){
     $('feedback').className = 'feedback info show';
-    $('feedback').textContent = '請用「我答到／仲未」自評。';
+    $('feedback').textContent = '請用「我答得到／仍未」自評。';
     return;
   }
   var raw = ($('ansInput')&&$('ansInput').value)||'';
@@ -866,10 +866,10 @@ function checkAnswer(){
   var ok = (st.accept||[]).some(function(a){ return n.indexOf(norm(a))!==-1 || norm(a).indexOf(n)!==-1; });
   if(ok){
     $('feedback').className = 'feedback ok show';
-    $('feedback').textContent = '啱！進入下一關。';
+    $('feedback').textContent = '正確！進入下一關。';
     setTimeout(function(){ advance(true); }, 450);
   }else{
-    onWrong('未啱。'+ (st.strategy?('策略：'+st.strategy):'試吓再提示。'), false);
+    onWrong('尚未正確。'+ (st.strategy?('策略：'+st.strategy):'可再索取提示。'), false);
   }
 }
 
@@ -883,7 +883,7 @@ function onWrong(msg, fromSelf){
     /* already in msg */
   }
   if(state.fails>=3 && !state.unlocked){
-    $('failNote').textContent = '已連續／累計失敗 3 次，可以開完整解法。';
+    $('failNote').textContent = '已連續／累計失敗 3 次，可以開啟完整解法。';
   }
   if(!fromSelf) revealNextHint();
 }
@@ -897,7 +897,7 @@ function revealNextHint(){
     state.hintLevel++;
   }else{
     $('feedback').className = 'feedback info show';
-    $('feedback').textContent = ( $('feedback').textContent || '' ) + ' （提示已用晒；可跳關或開解法。）';
+    $('feedback').textContent = ( $('feedback').textContent || '' ) + ' （提示已用完；可跳關或開啟解法。）';
   }
 }
 
@@ -924,8 +924,8 @@ function handleFile(file){
     $('photoPreview').classList.add('show');
     $('photoImg').src = state.photoData;
     $('photoMsg').textContent = getApiBase()
-      ? '已預覽。可以撳「影相引導」。'
-      : '已預覽。影相引導未就緒時會見到說明。';
+      ? '已預覽。可以按「拍照引導」。'
+      : '已預覽。拍照引導未就緒時會看到說明。';
     $('photoMsg').className = 'api-status note';
   };
   reader.readAsDataURL(file);
@@ -952,7 +952,7 @@ $('btnBack').addEventListener('click', function(){ showScreen('home'); });
 $('btnCheck').addEventListener('click', checkAnswer);
 $('btnHint').addEventListener('click', function(){
   if(state.mode==='ai'){
-    state.history.push({role:'student', content:'再提示一下（策略，唔要完整解）'});
+    state.history.push({role:'student', content:'再給一點提示（策略，不要完整解法）'});
     revealNextHint();
     aiRequest(false);
     return;
@@ -962,7 +962,7 @@ $('btnHint').addEventListener('click', function(){
 $('btnSkip').addEventListener('click', function(){
   if(state.mode==='ai'){
     state.fails++;
-    state.history.push({role:'student', content:'呢步答唔到，請換另一條引導問題'});
+    state.history.push({role:'student', content:'這一步答不到，請換成另一條引導問題'});
     aiRequest(false);
     return;
   }
@@ -972,7 +972,7 @@ $('btnSkip').addEventListener('click', function(){
 });
 $('btnUnlock').addEventListener('click', function(){
   if(state.mode==='ai'){
-    state.history.push({role:'student', content:'我試完，想對照解法（請允許開鎖，仍唔好一次傾晒）'});
+    state.history.push({role:'student', content:'我試完了，想對照解法（請允許開鎖，仍不要一次全部講完）'});
     aiRequest(true).then(function(){ unlockSolution(); });
     return;
   }
