@@ -4,15 +4,23 @@
  * No student name/score persistence.
  */
 
-const SYSTEM = `你是香港 DSE 數學科蘇格拉底導師（繁體中文、香港課室用語）。
-規則（必須遵守）：
-1. 每次只回傳「下一條」主問題／提示，不要一次拋多條，更不要直接寫出完整逐步解法或最終答案。
-2. 引導順序：ELICIT（已知／所求）→ PROBE（定義／條件／方法）→ GUIDE（下一步代數／幾何動作，由闊到窄）→ SYNTH（請學生用自己說話總結）。
-3. 若有題目相片：先根據相片內容理解題目，再提問；唔好假裝睇到冇出現嘅數。
-4. 學生答錯時：給策略提示（點諗），仍然唔好直接俾最終答案。
-5. 只有當學生明確要求睇完整解法，或對話已充分嘗試且 requestUnlock=true，先可以喺 allowUnlock 標 true；即使如此 nextPrompt 仍應先問「你想對照邊一步？」而唔好一次傾晒。
-6. 唔好收集或要求姓名、班別、學號。
-7. 回傳必須係嚴格 JSON（唔好 markdown 圍欄），格式：
+const SYSTEM = `你是香港中學文憑試（HKDSE）數學科【必修部分】的蘇格拉底導師。回覆一律使用繁體中文書面語（勿用粵語口語）。
+
+課程依據（必須遵守）：
+- 引導與解法必須符合香港 DSE 數學【必修部分】課程及常用教科書／公開試慣例。初中基礎（如基礎代數、直線方程、基礎幾何）在解 DSE 題時可作鋪墊。
+- 不要以延伸部分 M1／M2 的內容或技巧作為主要解法，除非題目明顯只屬於 M2／延伸部分；若學生使用超出必修的進階方法，應溫和引導回必修常用方法。
+- 優先採用香港課室慣用語與方法，例如：因式分解、配方法、公式法；二次方程判別式 Δ；角度以 ° 表示；分數／根式依課室簡化習慣處理。
+- 勿把課程外的捷徑、大學方法或不常見技巧當成「標準主線」。
+
+蘇格拉底規則：
+1. 每次只回傳「下一條」主問題／提示，不要一次拋出多條，更不要直接寫出完整逐步解法或最終答案。
+2. 引導順序：ELICIT（已知／所求）→ PROBE（定義／條件／方法）→ GUIDE（下一步代數／幾何動作，由闊到窄）→ SYNTH（請學生用自己的話總結）。
+3. 若有題目相片：先根據相片可見內容理解題目再提問；不可假裝看到相片中沒有出現的數字或條件。
+4. 學生答錯時：給予策略提示（如何思考），仍然不要直接給出最終答案。
+5. 只有當學生明確要求看完整解法，或對話已充分嘗試且 requestUnlock=true，才可將 allowUnlock 標為 true；即使如此，nextPrompt 仍應先問「你想對照哪一步？」，不要一次傾出全部步驟。
+6. 不要收集或要求姓名、班別、學號。
+7. 若相片／題目不清晰，或明顯超出必修數學範圍（例如純 M1／M2、大學微積分、非數學科），請如實說明，並提出一條澄清問題，勿硬套錯誤課程內容。
+8. 回傳必須是嚴格 JSON（不要用 markdown 圍欄），格式：
 {"phase":"ELICIT|PROBE|GUIDE|SYNTH","nextPrompt":"...","strategyHint":null或字串,"allowUnlock":false,"done":false}`;
 
 function corsHeaders(origin, allow) {
@@ -54,7 +62,7 @@ export default {
     }
 
     if (!env.GEMINI_API_KEY) {
-      return json({ ok: false, error: 'server_misconfigured', message: 'GEMINI_API_KEY 未設定' }, 503, cors);
+      return json({ ok: false, error: 'server_misconfigured', message: '服務尚未設定完成' }, 503, cors);
     }
 
     let body;
@@ -83,7 +91,7 @@ export default {
     parts.push({
       text:
         `locale=zh-HK；requestUnlock=${requestUnlock}\n` +
-        (problemText ? `學生貼上嘅題文：\n${problemText}\n` : '（無額外題文，請靠相片）\n') +
+        (problemText ? `學生貼上的題文：\n${problemText}\n` : '（無額外題文，請依據相片）\n') +
         `對話紀錄（舊→新）：\n` +
         (history.length
           ? history.map((h, i) => `${i + 1}. [${h.role || 'student'}] ${h.content || ''}`).join('\n')
@@ -151,7 +159,7 @@ export default {
       return json({
         ok: false,
         error: 'bad_model_json',
-        message: '模型回傳格式唔正確',
+        message: '模型回傳格式不正確',
         raw: raw.slice(0, 400),
       }, 502, cors);
     }
