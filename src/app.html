@@ -102,27 +102,34 @@ footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center
     <div class="brand">
       <div class="tag">馬Sir教室 · 蘇格拉底解題引導</div>
       <h1>影相／貼題 → 分步提示</h1>
-      <div class="sub">唔直接出完整答案 · 唔收集姓名／成績 · 公式內嵌 KaTeX</div>
+      <div class="sub">唔直接出完整答案 · 唔收集姓名／成績 · 公式會正確顯示</div>
     </div>
-    <span class="badge" id="modeBadge">試版 · AI 睇圖已開</span>
+    <span class="badge" id="modeBadge">學生練習版</span>
   </header>
 
   <!-- HOME -->
   <div id="screenHome" class="screen active">
-    <div class="banner warn" id="topBanner">
-      <strong>試版／示範模式：</strong>內建示範題可離線引導。
-      <strong>影相 AI 睇圖</strong>已接上後端（Key 只放伺服器）。
-      一次淨係一條主問題；完整解法預設隱藏。
-    </div>
+
+    <section class="card" id="studentIntro" style="margin-bottom:14px">
+      <h2>呢個網站點用？</h2>
+      <p class="note">呢度係<strong>蘇格拉底解題引導</strong>：影相或貼題之後，會一次俾你<strong>一條提示／問題</strong>，幫你自己諗，而唔係一次出晒完整答案。適合堂上練習同屋企溫習；唔會收集姓名同成績。</p>
+      <ol class="note" style="margin:10px 0 0 1.2em;padding:0;line-height:1.65">
+        <li><strong>想先熟流程：</strong>撳左邊一條<strong>示範題</strong>，跟住答每條提示。</li>
+        <li><strong>有自己嘅題：</strong>右邊上載題目相片（可再貼少少文字）→ 撳<strong>影相引導</strong>。</li>
+        <li><strong>得文字、無相：</strong>喺文字框貼題 → 撳<strong>文字題引導</strong>。</li>
+        <li>卡住可以要再細啲嘅提示；完整解法預設收起，試過之後先開。</li>
+      </ol>
+    </section>
+        <div class="banner ok" id="topBanner" hidden></div>
     <div class="grid">
       <section class="card">
-        <h2>① 示範模式（唔睇圖）</h2>
-        <p class="note">內建 DSE 風格題＋完整本地蘇格拉底腳本，可離線用，可自動核對關鍵答法。</p>
+        <h2>① 示範題（先試流程）</h2>
+        <p class="note">揀一條內建 DSE 風格題，跟住提示一步步答；唔使影相都可以練。</p>
         <div class="demo-list" id="demoList"></div>
       </section>
       <section class="card">
-        <h2>② 影相／貼題</h2>
-        <p class="note">上載相片會喺本機預覽。上載相片後撳「影相引導」就會由後端出蘇格拉底提示；本站<strong>唔會</strong>用關鍵字假裝睇圖。</p>
+        <h2>② 影相／貼題（自己嘅題）</h2>
+        <p class="note">上載題目相（可選再貼文字補充）→ 撳「影相引導」→ 跟住答每一條提示。</p>
         <label class="drop" id="dropZone">
           <input type="file" id="photoInput" accept="image/*">
           <div><strong>撳呢度上載題目相片</strong></div>
@@ -134,8 +141,8 @@ footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center
           <button type="button" class="btn ghost" id="btnClearCustom">清除</button>
         </div>
         <p class="api-status note" id="photoMsg"></p>
-        <h3>或者：只貼題文（本地文字引導，唔睇圖）</h3>
-        <textarea id="pasteText" rows="5" placeholder="例如：解方程 x^2 - 5x + 6 = 0&#10;（唔靠相片；用關鍵字粗分類再套通用鷹架）"></textarea>
+        <h3>或者：只貼題文（無相）</h3>
+        <textarea id="pasteText" rows="5" placeholder="例如：解方程 x^2 - 5x + 6 = 0"></textarea>
         <div class="row">
           <button type="button" class="btn" id="btnStartCustom">文字題本地引導</button>
         </div>
@@ -192,7 +199,7 @@ footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center
     </div>
   </div>
 
-  <footer class="foot">馬Sir教室 · 蘇格拉底解題引導（試版）· 唔收集姓名／成績 · 公式內嵌 KaTeX · Key 唔放前端</footer>
+  <footer class="foot">馬Sir教室 · 蘇格拉底解題引導 · 唔收集姓名／成績 · 公式會正確顯示</footer>
 </div>
 
 <script>/*KATEX_JS*/</script>
@@ -500,7 +507,7 @@ function genericSteps(familyId){
 function genericSolution(familyLabel){
   return '<p>呢題係<strong>自訂題</strong>（分類：'+escapeHtml(familyLabel)+'）。V1 本地引擎唔會自動寫出你條題嘅完整數式解；'+
     '請跟引導卡逐步完成，或問老師／對照筆記。</p>'+
-    '<p>完整解法位保留俾你自行填寫思路。影相 AI 睇圖要後端 Worker 接上先至用得。</p>';
+    '<p>完整解法位保留俾你自行填寫思路。影相引導要用「影相引導」掣先至出提示。</p>';
 }
 
 /* ========== API base (Worker) — never put Gemini Key here ========== */
@@ -508,15 +515,16 @@ function refreshApiBanner(){
   var base = getApiBase();
   var b = document.getElementById('topBanner');
   var badge = document.getElementById('modeBadge');
+  if(badge) badge.textContent = '學生練習版';
   if(!b) return;
   if(base){
+    b.hidden = true;
     b.className = 'banner ok';
-    b.innerHTML = '<strong>影相 AI 睇圖已開：</strong>後端已接上（Key 只放伺服器）。內建示範題仍可離線用。一次淨係一條主問題；完整解法預設隱藏。';
-    if(badge) badge.textContent = '試版 · AI 睇圖已開';
+    b.innerHTML = '';
   }else{
+    b.hidden = false;
     b.className = 'banner warn';
-    b.innerHTML = '<strong>試版／示範模式：</strong>內建示範題可離線引導。<strong>影相 AI 睇圖</strong>需要後端；<strong>而家未接上。</strong>一次淨係一條主問題；完整解法預設隱藏。';
-    if(badge) badge.textContent = '試版／示範模式';
+    b.innerHTML = '<strong>小提示：</strong>而家請先用左邊<strong>示範題</strong>練習。影相／貼題稍後再用。';
   }
 }
 
@@ -584,7 +592,7 @@ function startDemo(id){
 function startCustom(){
   var text = $('pasteText').value.trim();
   if(!text){
-    $('classResult').textContent = '請貼上題文。若只有相片，請用「影相引導」（需要後端 Worker）。';
+    $('classResult').textContent = '請貼上題文。若只有相片，請用「影相引導」。';
     return;
   }
   var fam = classify(text);
@@ -635,9 +643,9 @@ async function startPhoto(){
   }
   var base = getApiBase();
   if(!base){
-    $('photoMsg').innerHTML = '<strong>後端未接上：</strong>影相 AI 睇圖暫時未開。'+
-      '請用左邊<strong>示範模式（唔睇圖）</strong>，或者「文字題本地引導」。'+
-      '馬Sir 部署 Cloudflare Worker 並把網址填入 <code>&lt;meta name="socratic-api"&gt;</code>／<code>window.SOCRATIC_API</code> 後先可以用影相。'+
+    $('photoMsg').innerHTML = '<strong>影相引導暫時未得：</strong>'+
+      '請先用左邊<strong>示範題</strong>，或者「文字題本地引導」。'+
+      '請先用左邊示範題練習。'+
       '<br><em>本站唔會用關鍵字假裝睇到你張相。</em>';
     $('photoMsg').className = 'api-status banner warn';
     return;
@@ -665,7 +673,7 @@ async function aiRequest(requestUnlock){
   $('btnCheck').disabled = true;
   $('btnHint').disabled = true;
   $('feedback').className = 'feedback info show';
-  $('feedback').textContent = '正在請後端睇圖／產生下一條提示…';
+  $('feedback').textContent = '正在睇題同產生下一條提示…';
   try{
     var parts = dataUrlParts(state.photoData);
     var text = $('pasteText') ? $('pasteText').value.trim() : '';
@@ -694,7 +702,7 @@ async function aiRequest(requestUnlock){
     }];
     state.step = 0;
     if(data.allowUnlock){
-      $('failNote').textContent = '後端容許開鎖（仍建議先自己試）。';
+      $('failNote').textContent = '而家可以開鎖睇完整解法（仍建議先自己試）。';
     }
     if(data.done){
       $('feedback').className = 'feedback ok show';
@@ -707,9 +715,9 @@ async function aiRequest(requestUnlock){
     var msg = String(e && e.message || e);
     $('feedback').className = 'feedback bad show';
     if(msg === 'no_api'){
-      $('feedback').textContent = '後端未接上，無法影相 AI。';
+      $('feedback').textContent = '影相引導暫時未得用，請返主頁用示範題。';
     }else{
-      $('feedback').textContent = '後端錯誤：'+msg+'。可返主頁改用示範題。';
+      $('feedback').textContent = '暫時未得：'+msg+'。可返主頁改用示範題。';
     }
     $('btnCheck').disabled = true;
   }finally{
@@ -907,8 +915,8 @@ function handleFile(file){
     $('photoPreview').classList.add('show');
     $('photoImg').src = state.photoData;
     $('photoMsg').textContent = getApiBase()
-      ? '已預覽。可以撳「影相引導」呼叫後端。'
-      : '已預覽。後端未接上：撳「影相引導」會見到說明（唔會假裝睇圖）。';
+      ? '已預覽。可以撳「影相引導」。'
+      : '已預覽。影相引導未就緒時會見到說明。';
     $('photoMsg').className = 'api-status note';
   };
   reader.readAsDataURL(file);
