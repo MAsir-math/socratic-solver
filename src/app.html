@@ -155,7 +155,7 @@ footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center
   <div id="screenTutor" class="screen">
     <div class="row" style="margin-bottom:10px">
       <button type="button" class="btn ghost" id="btnBack">← 返主頁</button>
-      <span class="pill" id="modePill">示範模式（唔睇圖）</span>
+      <span class="pill" id="modePill">示範題</span>
       <span class="family" id="familyLabel"></span>
     </div>
     <div class="grid">
@@ -568,7 +568,7 @@ function buildDemoList(){
     var b = document.createElement('button');
     b.type = 'button';
     b.className = 'demo-item';
-    b.innerHTML = '<span class="meta">示範模式（唔睇圖） · '+escapeHtml(d.meta)+'</span><span class="title">'+escapeHtml(d.title)+'</span><span class="snip">'+escapeHtml(d.snip)+'</span>';
+    b.innerHTML = '<span class="meta">示範題 · '+escapeHtml(d.meta)+'</span><span class="title">'+escapeHtml(d.title)+'</span><span class="snip">'+escapeHtml(d.snip)+'</span>';
     b.addEventListener('click', function(){ startDemo(d.id); });
     box.appendChild(b);
   });
@@ -752,7 +752,7 @@ function resetTutor(){
   state.fails = 0;
   state.hintLevel = 0;
   state.unlocked = false;
-  $('modePill').textContent = state.mode==='demo' ? '示範模式（唔睇圖）' : (state.mode==='ai' ? '影相 AI' : '文字本地引導');
+  $('modePill').textContent = state.mode==='demo' ? '示範題' : (state.mode==='ai' ? '影相 AI' : '文字本地引導');
   $('familyLabel').textContent = state.family ? (' · '+state.family.label) : '';
   $('probText').innerHTML = state.pack.problemHtml;
   renderMath($('probText'));
