@@ -90,6 +90,7 @@ footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center
 .katex{font-size:1.05em}
 .self-rate{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .banner{background:#eef6ff;border:1px solid #c5daf3;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:.9rem}
+.banner.ok{background:#e8f7ef;border-color:#7dcea0;color:#1e5c3a;}
 .banner.warn{background:#fff6d6;border-color:#f0d78c;color:#5c4500}
 .banner.err{background:#fdecea;border-color:#f0b8b2;color:#7a1f16}
 .api-status{font-size:.82rem;margin-top:8px}
@@ -104,15 +105,14 @@ footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center
       <h1>影相／貼題 → 分步提示</h1>
       <div class="sub">唔直接出完整答案 · 唔收集姓名／成績 · 公式內嵌 KaTeX</div>
     </div>
-    <span class="badge">試版／示範模式</span>
+    <span class="badge" id="modeBadge">試版 · AI 睇圖已開</span>
   </header>
 
   <!-- HOME -->
   <div id="screenHome" class="screen active">
     <div class="banner warn" id="topBanner">
       <strong>試版／示範模式：</strong>內建示範題可離線引導。
-      <strong>影相 AI 睇圖</strong>需要後端 Worker（Key 只放伺服器）；
-      <strong>而家 AI 睇圖未開。</strong>
+      <strong>影相 AI 睇圖</strong>已接上後端（Key 只放伺服器）。
       一次淨係一條主問題；完整解法預設隱藏。
     </div>
     <div class="grid">
@@ -123,7 +123,7 @@ footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center
       </section>
       <section class="card">
         <h2>② 影相／貼題</h2>
-        <p class="note">上載相片會喺本機預覽。真正「睇圖出提示」要接上後端 Worker；未接上時<strong>唔會</strong>用關鍵字假裝睇圖。</p>
+        <p class="note">上載相片會喺本機預覽。上載相片後撳「影相引導」就會由後端出蘇格拉底提示；本站<strong>唔會</strong>用關鍵字假裝睇圖。</p>
         <label class="drop" id="dropZone">
           <input type="file" id="photoInput" accept="image/*">
           <div><strong>撳呢度上載題目相片</strong></div>
@@ -505,6 +505,22 @@ function genericSolution(familyLabel){
 }
 
 /* ========== API base (Worker) — never put Gemini Key here ========== */
+function refreshApiBanner(){
+  var base = getApiBase();
+  var b = document.getElementById('topBanner');
+  var badge = document.getElementById('modeBadge');
+  if(!b) return;
+  if(base){
+    b.className = 'banner ok';
+    b.innerHTML = '<strong>影相 AI 睇圖已開：</strong>後端已接上（Key 只放伺服器）。內建示範題仍可離線用。一次淨係一條主問題；完整解法預設隱藏。';
+    if(badge) badge.textContent = '試版 · AI 睇圖已開';
+  }else{
+    b.className = 'banner warn';
+    b.innerHTML = '<strong>試版／示範模式：</strong>內建示範題可離線引導。<strong>影相 AI 睇圖</strong>需要後端；<strong>而家未接上。</strong>一次淨係一條主問題；完整解法預設隱藏。';
+    if(badge) badge.textContent = '試版／示範模式';
+  }
+}
+
 function getApiBase(){
   if(typeof window.SOCRATIC_API === 'string' && window.SOCRATIC_API.trim()){
     return window.SOCRATIC_API.trim().replace(/\/$/, '');
@@ -901,6 +917,7 @@ function handleFile(file){
 
 /* Wire */
 buildDemoList();
+refreshApiBanner();
 
 $('btnStartCustom').addEventListener('click', startCustom);
 $('btnStartPhoto').addEventListener('click', function(){ startPhoto(); });
