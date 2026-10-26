@@ -81,7 +81,8 @@ python3 -m http.server 8766
 
 - 上載前把相片長邊縮到約 1800px、轉成 JPEG，再送去 Worker（細圖就保持原檔）。
 - 等候時引導卡會顯示進度同已等候秒數；返回主頁會取消未完成嘅請求。
-- Worker 對 `gemini-3.8-flash` 設 `thinkingLevel: low`（預設係 medium，會拖慢一條提示）。輸出上限放到 4096，避免思考 token 截斷 JSON。可用環境變數 `GEMINI_THINKING` 覆寫；唔好設 `minimal`（呢個模型會拒絕）。
+- 預設模型改為 `gemini-3.5-flash-lite`（`GEMINI_MODEL` 可覆寫）。`gemini-3.8-flash` 喺 Free tier 常出現 503，Worker 會自動 fallback（`GEMINI_FALLBACK_MODEL`，預設 `gemini-3.6-flash,gemini-3.8-flash,gemini-2.5-flash`）。
+- 對 Gemini 3.x 唔再傳 `temperature`（已棄用會拒收）。thinking 用 `thinkingLevel: low`（2.5 系列會略過）。輸出上限 4096。
 - 上游錯誤唔再把回應正文傳去瀏覽器，避免錯誤訊息帶出網址或秘密。
 
 ## 已知限制（試版）

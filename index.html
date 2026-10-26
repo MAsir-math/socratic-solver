@@ -875,7 +875,7 @@ async function aiRequest(requestUnlock){
   var t0 = Date.now();
   var ac = new AbortController();
   state.aiAbort = ac;
-  var kill = setTimeout(function(){ ac.abort(); }, 60000);
+  var kill = setTimeout(function(){ ac.abort(); }, 90000);
   renderWaiting(0);
   var waitTimer = setInterval(function(){
     if(settled || gen !== state.aiSeq) return;
@@ -1136,7 +1136,7 @@ function unlockSolution(){
 }
 
 /* Photo: shrink before upload so the request and vision step are smaller. */
-var PHOTO_MAX_EDGE = 1800;
+var PHOTO_MAX_EDGE = 1280;
 var PHOTO_JPEG_QUALITY = 0.8;
 var photoTicket = 0;
 
@@ -1392,9 +1392,9 @@ function runSelfTest(){
     var broken = mixedToHtml('壞掉 $\\frac{$ 尾');
     check('invalid latex kept', broken.indexOf('$\\frac{$') !== -1 || broken.indexOf('$') !== -1);
 
-    var size = targetSize(4000, 3000, 1800);
-    check('resize long edge', size.w === 1800 && size.h === 1350 && size.scaled);
-    var small = targetSize(800, 600, 1800);
+    var size = targetSize(4000, 3000, 1280);
+    check('resize long edge', size.w === 1280 && size.h === 960 && size.scaled);
+    var small = targetSize(800, 600, 1280);
     check('keep small photo', small.w === 800 && small.h === 600 && !small.scaled);
 
     check('error hides upstream', studentFacingError('upstream_http') === '暫時未能完成，請稍後再試，或返回主頁改用示範題。');
@@ -1501,7 +1501,7 @@ async function verifyPhotoShrink(){
   var smallBlob = await canvasJpeg(400, 300);
   var small = await preparePhoto(new File([smallBlob], 'small.jpg', {type:'image/jpeg'}));
   var smallSize = await decodeEdge(small.dataUrl);
-  var bigOk = big.shrunk && bigSize.w === 1800 && bigSize.h === 1200 && big.dataUrl.indexOf('data:image/jpeg') === 0;
+  var bigOk = big.shrunk && bigSize.w === 1280 && bigSize.h === 853 && big.dataUrl.indexOf('data:image/jpeg') === 0;
   var smallOk = !small.shrunk && smallSize.w === 400 && smallSize.h === 300;
   if(bigOk && smallOk) return 'PASS photo shrink';
   return 'FAIL photo shrink big=' + bigSize.w + 'x' + bigSize.h + ' shrunk=' + big.shrunk + ' small=' + smallSize.w + 'x' + smallSize.h + ' shrunk=' + small.shrunk;

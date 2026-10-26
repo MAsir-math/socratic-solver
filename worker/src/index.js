@@ -44,16 +44,20 @@ function json(data, status, cors) {
   });
 }
 
-function generationConfig(env) {
-  // gemini-3.8-flash defaults to thinkingLevel "medium", which delays a one-hint reply.
-  // "low" is the supported latency setting; "minimal" is rejected on this model.
+function generationConfig(env, model) {
+  // Gemini 3.x rejects deprecated sampling params (temperature / top_p / top_k) — omit them.
   // Do not lower maxOutputTokens to chase speed: the cap includes thinking tokens.
-  const level = String(env.GEMINI_THINKING || 'low').trim();
   const config = {
-    temperature: 0.4,
     maxOutputTokens: 4096,
     responseMimeType: 'application/json',
   };
+  const id = String(model || '');
+  // 2.5 series uses thinkingBudget, not thinkingLevel — omit thinking for those.
+  if (/gemini-2\.5/.test(id)) {
+    return config;
+  }
+  // 3.8 defaults to medium (slow); low is the latency setting. minimal rejected on 3.8.
+  const level = String(env.GEMINI_THINKING || 'low').trim();
   if (level && level !== 'default') {
     config.thinkingConfig = { thinkingLevel: level };
   }
@@ -125,40 +129,99 @@ export default {
       });
     }
 
-    const model = env.GEMINI_MODEL || 'gemini-3.8-flash';
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`;
-
-    const ac = new AbortController();
-    const timer = setTimeout(() => ac.abort(), 55000);
-    let geminiRes;
-    try {
-      geminiRes = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: ac.signal,
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM }] },
-          contents: [{ role: 'user', parts }],
-          generationConfig: generationConfig(env),
-        }),
-      });
-    } catch (e) {
-      const timedOut = e && (e.name === 'AbortError' || e.name === 'TimeoutError');
-      return json({
-        ok: false,
-        error: timedOut ? 'upstream_timeout' : 'upstream_network',
-        message: '暫時未能讀取題目，請再試一次。',
-      }, 502, cors);
-    } finally {
-      clearTimeout(timer);
+    // 3.8 Flash free-tier has frequent 503 UNAVAILABLE (Google forums Oct 2026).
+    // Default primary = 3.6; optional override via GEMINI_MODEL. Fallbacks keep class usable.
+    const primaryModel = env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+    const fallbackRaw = env.GEMINI_FALLBACK_MODEL || 'gemini-3.6-flash,gemini-3.8-flash,gemini-2.5-flash';
+    const modelChain = [primaryModel];
+    for (const m of String(fallbackRaw).split(',').map((s) => s.trim()).filter(Boolean)) {
+      if (m && !modelChain.includes(m)) modelChain.push(m);
     }
 
-    if (!geminiRes.ok) {
-      try { await geminiRes.body?.cancel(); } catch { /* ignore unread upstream body */ }
+    async function callGemini(model) {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`;
+      const ac = new AbortController();
+      // Per-attempt budget: leave room for 2–3 model tries under frontend 90s.
+      const timer = setTimeout(() => ac.abort(), 22000);
+      try {
+        return await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: ac.signal,
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: SYSTEM }] },
+            contents: [{ role: 'user', parts }],
+            generationConfig: generationConfig(env, model),
+          }),
+        });
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    function isRetryableStatus(status) {
+      return status === 404 || status === 408 || status === 429 || status === 500 || status === 502 || status === 503 || status === 504;
+    }
+
+    async function readUpstreamMeta(res) {
+      let upstreamStatus = res.status;
+      let upstreamReason = '';
+      let bodyText = '';
+      try {
+        bodyText = await res.text();
+        const errBody = JSON.parse(bodyText);
+        const st = errBody && errBody.error && errBody.error.status;
+        const msg = errBody && errBody.error && errBody.error.message;
+        upstreamReason = String(st || msg || '').slice(0, 120);
+      } catch {
+        upstreamReason = '';
+      }
+      return { upstreamStatus, upstreamReason, bodyText };
+    }
+
+    let geminiRes = null;
+    let lastMeta = { upstreamStatus: 0, upstreamReason: '', bodyText: '' };
+    let timedOut = false;
+    let networkFail = false;
+
+    outer: for (const model of modelChain) {
+      try {
+        geminiRes = await callGemini(model);
+      } catch (e) {
+        timedOut = e && (e.name === 'AbortError' || e.name === 'TimeoutError');
+        networkFail = !timedOut;
+        geminiRes = null;
+        continue;
+      }
+      if (geminiRes.ok) break outer;
+      lastMeta = await readUpstreamMeta(geminiRes);
+      geminiRes = null;
+      if (!isRetryableStatus(lastMeta.upstreamStatus)) break outer;
+      // brief pause before next model on overload
+      await new Promise((r) => setTimeout(r, 400 + Math.floor(Math.random() * 400)));
+    }
+
+    if (!geminiRes) {
+      if (timedOut && !lastMeta.upstreamStatus) {
+        return json({
+          ok: false,
+          error: 'upstream_timeout',
+          message: '暫時未能讀取題目，請再試一次。',
+        }, 502, cors);
+      }
+      if (networkFail && !lastMeta.upstreamStatus) {
+        return json({
+          ok: false,
+          error: 'upstream_network',
+          message: '暫時未能讀取題目，請再試一次。',
+        }, 502, cors);
+      }
       return json({
         ok: false,
         error: 'upstream_http',
         message: '暫時未能讀取題目，請再試一次。',
+        upstreamStatus: lastMeta.upstreamStatus || undefined,
+        upstreamReason: lastMeta.upstreamReason || undefined,
       }, 502, cors);
     }
 

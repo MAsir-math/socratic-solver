@@ -3,12 +3,15 @@ main = "src/index.js"
 compatibility_date = "2024-10-01"
 
 # Set secret: wrangler secret put GEMINI_API_KEY
-# Optional: [vars] GEMINI_MODEL = "gemini-3.8-flash"
+# Optional: [vars] GEMINI_MODEL = "gemini-3.5-flash-lite"
 
 [vars]
-GEMINI_MODEL = "gemini-3.8-flash"
+GEMINI_MODEL = "gemini-3.5-flash-lite"
 # Optional: GEMINI_THINKING = "low" | "medium" | "high" | "default"
 # Code defaults to low. 3.8 Flash otherwise thinks at medium and the first hint is slower.
 # Do not set "minimal" — this model rejects it.
 # CORS: allow GitHub Pages origin after first deploy; * OK for school trial if needed
 ALLOW_ORIGIN = "https://masir-math.github.io"
+
+# Optional fallbacks (comma-separated) when primary returns 503/404
+# GEMINI_FALLBACK_MODEL = "gemini-3.6-flash,gemini-3.8-flash"

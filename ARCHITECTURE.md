@@ -18,7 +18,7 @@
 ```
 
 - **Frontend**：`index.html`（Pages，由 `src/app.html` 經 `python3 src/build.py` 產生）。示範題用本地腳本，公式用內嵌 KaTeX。影相模式只呼叫 API。AI 回傳嘅 `nextPrompt`／`strategyHint` 若含 `$...$`、`$$...$$`、`\(...\)` 或 `\[...\]`，前端會轉成 KaTeX；不合法或未閉合嘅 `$` 保持原文。上載前先把相片長邊縮到約 1800px。失敗就誠實報未能使用，**唔會**用關鍵字假裝睇圖，亦**唔會**把上游錯誤正文顯示俾學生。
-- **Backend**：`worker/` Cloudflare Worker（亦可以改寫成 Vercel `api/socratic.ts`，合約相同）。模型 id 維持 `gemini-3.8-flash`，`thinkingLevel` 預設 `low`（可用 `GEMINI_THINKING` 覆寫）。
+- **Backend**：`worker/` Cloudflare Worker（亦可以改寫成 Vercel `api/socratic.ts`，合約相同）。預設模型 `gemini-3.5-flash-lite`（可用 `GEMINI_MODEL` 覆寫）；503／404 會按 `GEMINI_FALLBACK_MODEL` 試下一款。Gemini 3.x 唔傳 `temperature`；thinking 預設 `low`。
 
 ## API 合約 `POST /api/socratic`
 

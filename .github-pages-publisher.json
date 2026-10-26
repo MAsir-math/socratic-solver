@@ -1,0 +1,18 @@
+{
+  "owner": "MAsir-math",
+  "repo": "socratic-solver",
+  "repo_url": "https://github.com/MAsir-math/socratic-solver",
+  "url": "https://masir-math.github.io/socratic-solver/",
+  "branch": "main",
+  "path": "/",
+  "files_published": [
+    "index.html",
+    "README.md",
+    "ARCHITECTURE.md",
+    ".nojekyll",
+    "worker/",
+    "src/"
+  ],
+  "published_at": "2026-10-26T15:43:53+08:00",
+  "note": "Fix timeout: primary 3.5-flash-lite + fallbacks; drop temperature; frontend 90s/1280px"
+}
