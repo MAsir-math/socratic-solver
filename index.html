@@ -88,6 +88,32 @@ textarea:focus,input:focus{outline:2px solid #c5daf3;border-color:var(--brand2)}
 .settings .box{margin-top:8px;background:#fafbfd;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:.88rem}
 footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center}
 .katex{font-size:1.05em}
+.socratic .q,.socratic .help,.hint-layer{overflow-x:auto}
+.socratic .q .katex,.socratic .help .katex,.hint-layer .katex{font-weight:400}
+.katex-display{margin:.4em 0;overflow-x:auto;overflow-y:hidden}
+.socratic.waiting{
+  background-color:#fff;
+  background-image:linear-gradient(90deg, transparent, #d6e6f8, transparent);
+  background-size:45% 3px;
+  background-repeat:no-repeat;
+  animation:socratic-bar 1.1s ease-in-out infinite;
+}
+.socratic.waiting .phase::before{
+  content:"";
+  display:inline-block;
+  width:.85em;height:.85em;
+  margin-right:6px;
+  border:2px solid #c5daf3;
+  border-top-color:var(--brand);
+  border-radius:50%;
+  vertical-align:-2px;
+  animation:socratic-spin .8s linear infinite;
+}
+@keyframes socratic-spin{to{transform:rotate(360deg)}}
+@keyframes socratic-bar{from{background-position:-40% 0}to{background-position:140% 0}}
+@media (prefers-reduced-motion: reduce){
+  .socratic.waiting,.socratic.waiting .phase::before{animation:none}
+}
 .self-rate{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .banner{background:#eef6ff;border:1px solid #c5daf3;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:.9rem}
 .banner.ok{background:#e8f7ef;border-color:#7dcea0;color:#1e5c3a;}
@@ -183,7 +209,7 @@ footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center
         <h2>引導卡</h2>
         <div class="socratic" id="socraticCard">
           <div class="phase" id="phaseLabel">ELICIT</div>
-          <p class="q" id="mainQ"></p>
+          <p class="q" id="mainQ" aria-live="polite"></p>
           <p class="help" id="helpText"></p>
           <div class="ans-box" id="ansBox"></div>
           <div class="row">
@@ -192,7 +218,7 @@ footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center
             <button type="button" class="btn ghost" id="btnSkip">我答不到，下一關</button>
           </div>
           <div id="hintLayers"></div>
-          <div class="feedback" id="feedback"></div>
+          <div class="feedback" id="feedback" aria-live="polite"></div>
         </div>
         <div class="locked" id="lockBox">
           <strong>完整解法已隱藏</strong>
@@ -232,6 +258,108 @@ function mathSpan(tex, display){
 }
 function escapeAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* Turn model text with $...$ / $$...$$ / \( \) / \[ \] into KaTeX spans.
+   Invalid or unclosed delimiters stay as escaped text, so a stray dollar is not eaten. */
+function tryMathSpan(tex, display){
+  var t = String(tex || '').replace(/\r\n?/g, '\n').replace(/\n+/g, ' ').trim();
+  if(!t || t.length > 1000) return null;
+  if(window.katex){
+    try{
+      katex.renderToString(t, {throwOnError:true, displayMode:!!display});
+    }catch(e){ return null; }
+  }
+  return mathSpan(t, display);
+}
+function nextMathStart(s, i){
+  for(var k = i; k < s.length; k++){
+    if(s.charAt(k) === '$') return k;
+    if(s.charAt(k) === '\\' && k + 1 < s.length){
+      var n = s.charAt(k + 1);
+      if(n === '(' || n === '[' || n === '$') return k;
+    }
+  }
+  return s.length;
+}
+function indexOfUnescaped(s, ch, from){
+  for(var k = from; k < s.length; k++){
+    if(s.charAt(k) === '\\'){ k++; continue; }
+    if(s.charAt(k) === '\n') return -1;
+    if(s.charAt(k) === ch) return k;
+  }
+  return -1;
+}
+function takeMath(s, i){
+  var j, html;
+  if(s.startsWith('$$', i)){
+    j = s.indexOf('$$', i + 2);
+    if(j === -1) return null;
+    html = tryMathSpan(s.slice(i + 2, j), true);
+    return html ? {html:html, next:j + 2} : null;
+  }
+  if(s.startsWith('\\[', i)){
+    j = s.indexOf('\\]', i + 2);
+    if(j === -1) return null;
+    html = tryMathSpan(s.slice(i + 2, j), true);
+    return html ? {html:html, next:j + 2} : null;
+  }
+  if(s.startsWith('\\(', i)){
+    j = s.indexOf('\\)', i + 2);
+    if(j === -1) return null;
+    html = tryMathSpan(s.slice(i + 2, j), false);
+    return html ? {html:html, next:j + 2} : null;
+  }
+  if(s.startsWith('\\$', i)) return {html:escapeHtml('$'), next:i + 2};
+  if(s.charAt(i) === '$'){
+    j = indexOfUnescaped(s, '$', i + 1);
+    if(j === -1) return null;
+    html = tryMathSpan(s.slice(i + 1, j), false);
+    return html ? {html:html, next:j + 1} : null;
+  }
+  return null;
+}
+function mixedToHtml(text){
+  var s = String(text == null ? '' : text);
+  var html = '';
+  var i = 0;
+  while(i < s.length){
+    var consumed = takeMath(s, i);
+    if(consumed){
+      html += consumed.html;
+      i = consumed.next;
+      continue;
+    }
+    var next = nextMathStart(s, i);
+    if(next === i){
+      html += escapeHtml(s.charAt(i));
+      i += 1;
+      continue;
+    }
+    html += escapeHtml(s.slice(i, next)).replace(/\n/g, '<br>');
+    i = next;
+  }
+  return html;
+}
+function setRichText(el, text){
+  if(!el) return;
+  el.innerHTML = mixedToHtml(text || '');
+  renderMath(el);
+}
+function studentFacingError(code){
+  switch(String(code || '')){
+    case 'no_api':
+      return '拍照引導暫時未能使用，請返回主頁使用示範題。';
+    case 'image_too_large':
+      return '相片太大，請裁切題目或改用較小的相片再試。';
+    case 'need_image_or_text':
+      return '請先上載題目相片或貼上題文。';
+    case 'upstream_timeout':
+    case 'AbortError':
+      return '等候太久，請再試一次。';
+    default:
+      return '暫時未能完成，請稍後再試，或返回主頁改用示範題。';
+  }
+}
 function norm(s){
   return String(s||'').toLowerCase().replace(/\s+/g,'').replace(/＝/g,'=').replace(/，/g,',').replace(/（/g,'(').replace(/）/g,')');
 }
@@ -520,7 +648,7 @@ function genericSolution(familyLabel){
     '<p>完整解法位置保留給你自行填寫思路。拍照引導需按「拍照引導」按鈕才會出現提示。</p>';
 }
 
-/* ========== API base (Worker) — never put Gemini Key here ========== */
+/* ========== API base — the key stays on the server ========== */
 function refreshApiBanner(){
   var base = getApiBase();
   var b = document.getElementById('topBanner');
@@ -558,9 +686,13 @@ var state = {
   unlocked:false,
   photoData:null,
   photoMime:null,
+  photoReady:null,
   family:null,
   history:[],
-  aiBusy:false
+  aiBusy:false,
+  aiSeq:0,
+  aiAbort:null,
+  photoStarting:false
 };
 
 /* ========== DOM ========== */
@@ -625,69 +757,133 @@ function dataUrlParts(dataUrl){
   return {mime:m[1], b64:m[2]};
 }
 
-async function callSocraticApi(payload){
+async function callSocraticApi(payload, signal){
   var base = getApiBase();
-  if(!base) throw new Error('no_api');
+  if(!base){
+    var missing = new Error('no_api');
+    missing.code = 'no_api';
+    throw missing;
+  }
   var url = base + '/api/socratic';
-  var res = await fetch(url, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(payload)
-  });
+  var res;
+  try{
+    res = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload),
+      signal: signal
+    });
+  }catch(e){
+    var net = new Error(e && e.name === 'AbortError' ? 'upstream_timeout' : 'upstream_network');
+    net.code = e && e.name === 'AbortError' ? 'upstream_timeout' : 'upstream_network';
+    throw net;
+  }
   var data = null;
   try{ data = await res.json(); }catch(e){}
-  if(!res.ok){
-    var err = (data && (data.message || data.error)) || ('HTTP '+res.status);
-    throw new Error(err);
+  if(!res.ok || !data || data.ok === false){
+    var err = new Error((data && data.error) || ('HTTP_' + res.status));
+    err.code = (data && data.error) || ('HTTP_' + res.status);
+    throw err;
   }
   return data;
 }
 
 async function startPhoto(){
+  if(state.photoStarting || state.aiBusy) return;
+  state.photoStarting = true;
+  $('btnStartPhoto').disabled = true;
   $('photoMsg').textContent = '';
   $('photoMsg').className = 'api-status note';
-  if(!state.photoData){
-    $('photoMsg').textContent = '請先上載題目相片。';
-    $('photoMsg').className = 'api-status banner err';
-    return;
+  try{
+    if(state.photoReady){
+      $('photoMsg').textContent = '正在準備相片…';
+      try{ await state.photoReady; }catch(e){}
+    }
+    if(!state.photoData){
+      $('photoMsg').textContent = '請先上載題目相片。';
+      $('photoMsg').className = 'api-status banner err';
+      return;
+    }
+    if(state.photoData.length > 5000000){
+      $('photoMsg').textContent = '相片仍然太大，請裁切題目或改用較小的 JPG。';
+      $('photoMsg').className = 'api-status banner err';
+      return;
+    }
+    var base = getApiBase();
+    if(!base){
+      $('photoMsg').innerHTML = '<strong>拍照引導暫時未能使用：</strong>'+
+        '請先用左邊<strong>示範題</strong>，或者「文字題引導」。'+
+        '請先用左邊示範題練習。'+
+        '<br><em>本站不會用關鍵字假裝已讀取你的相片。</em>';
+      $('photoMsg').className = 'api-status banner warn';
+      return;
+    }
+    var text = $('pasteText').value.trim();
+    state.mode = 'ai';
+    state.family = {id:'ai', label:'拍照 AI'};
+    state.history = [];
+    state.fails = 0;
+    state.unlocked = false;
+    state.pack = {
+      problemHtml: text ? ('<p>'+mixedToHtml(text)+'</p>') : '<p class="note">（以相片為主；可在下方補充文字）</p>',
+      solutionHtml: '<p>完整解法預設隱藏。多次嘗試或你確認試完後再開鎖；即使開鎖，亦建議先對照關鍵一步。</p>',
+      steps: [{phase:'ELICIT', q:'正在閱讀題目…', help:'', type:'self', hints:[], strategy:''}],
+      title: '拍照引導'
+    };
+    resetTutor();
+    renderWaiting(0);
+    await aiRequest(false);
+  }finally{
+    state.photoStarting = false;
+    $('btnStartPhoto').disabled = false;
   }
-  var base = getApiBase();
-  if(!base){
-    $('photoMsg').innerHTML = '<strong>拍照引導暫時未能使用：</strong>'+
-      '請先用左邊<strong>示範題</strong>，或者「文字題引導」。'+
-      '請先用左邊示範題練習。'+
-      '<br><em>本站不會用關鍵字假裝已讀取你的相片。</em>';
-    $('photoMsg').className = 'api-status banner warn';
-    return;
+}
+
+function renderWaiting(seconds){
+  var first = !state.history.length;
+  var stage = seconds >= 20 ? 2 : (seconds >= 8 ? 1 : 0);
+  var title = first ? '正在閱讀題目…' : '正在準備下一條提示…';
+  var detail = '可以先在相片裏圈出已知與所求。';
+  if(stage === 1){
+    title = '仍在整理這一條提示…';
+    detail = '題目較長時會多等一會兒。';
+  }else if(stage === 2){
+    title = '請再稍候…';
+    detail = '若太久仍沒有提示，可以返回後再試。';
   }
-  var text = $('pasteText').value.trim();
-  var parts = dataUrlParts(state.photoData);
-  state.mode = 'ai';
-  state.family = {id:'ai', label:'拍照 AI'};
-  state.history = [];
-  state.fails = 0;
-  state.unlocked = false;
-  state.pack = {
-    problemHtml: text ? ('<p>'+escapeHtml(text).replace(/\n/g,'<br>')+'</p>') : '<p class="note">（以相片為主；可在下方補充文字）</p>',
-    solutionHtml: '<p>AI 模式完整解法預設隱藏。多次嘗試或你確認試完後再開鎖；即使開鎖，亦建議先對照關鍵一步。</p>',
-    steps: [{phase:'ELICIT', q:'載入中…', help:'', type:'self', hints:[], strategy:''}],
-    title: '拍照 AI 引導'
-  };
-  resetTutor();
-  await aiRequest(false);
+  $('socraticCard').classList.add('waiting');
+  $('socraticCard').setAttribute('aria-busy', 'true');
+  $('phaseLabel').textContent = '請稍候';
+  $('mainQ').textContent = title;
+  $('helpText').textContent = detail + (seconds > 0 ? (' 已等候 ' + seconds + ' 秒。') : '');
+  $('ansBox').classList.add('hidden');
+  $('hintLayers').innerHTML = '';
+  $('feedback').className = 'feedback info show';
+  $('feedback').textContent = '正在準備下一條提示，請稍候。';
+  $('btnCheck').disabled = true;
+  $('btnHint').disabled = true;
+  $('btnSkip').disabled = true;
+  var waitingInput = $('ansInput');
+  if(waitingInput && document.activeElement === waitingInput) waitingInput.blur();
 }
 
 async function aiRequest(requestUnlock){
   if(state.aiBusy) return;
+  var gen = ++state.aiSeq;
   state.aiBusy = true;
-  $('btnCheck').disabled = true;
-  $('btnHint').disabled = true;
-  $('feedback').className = 'feedback info show';
-  $('feedback').textContent = '正在讀取題目並產生下一條提示…';
+  var settled = false;
+  var t0 = Date.now();
+  var ac = new AbortController();
+  state.aiAbort = ac;
+  var kill = setTimeout(function(){ ac.abort(); }, 60000);
+  renderWaiting(0);
+  var waitTimer = setInterval(function(){
+    if(settled || gen !== state.aiSeq) return;
+    renderWaiting(Math.floor((Date.now() - t0) / 1000));
+  }, 500);
   try{
     var parts = dataUrlParts(state.photoData);
     var text = $('pasteText') ? $('pasteText').value.trim() : '';
-    // Prefer problem text stored in pack when already in tutor; paste may still be on home
     var data = await callSocraticApi({
       imageBase64: parts.b64,
       mimeType: parts.mime || state.photoMime || 'image/jpeg',
@@ -695,9 +891,14 @@ async function aiRequest(requestUnlock){
       history: state.history,
       locale: 'zh-HK',
       requestUnlock: !!requestUnlock
-    });
+    }, ac.signal);
+    if(gen !== state.aiSeq) return;
+    settled = true;
+    clearInterval(waitTimer);
     if(!data || !data.ok){
-      throw new Error((data && (data.message||data.error)) || 'api_failed');
+      var bad = new Error((data && data.error) || 'api_failed');
+      bad.code = (data && data.error) || 'api_failed';
+      throw bad;
     }
     var prompt = data.nextPrompt || '請再說明你現在想到哪一步？';
     var phase = data.phase || 'GUIDE';
@@ -711,6 +912,7 @@ async function aiRequest(requestUnlock){
       strategy: data.strategyHint || ''
     }];
     state.step = 0;
+    renderStep();
     if(data.allowUnlock){
       $('failNote').textContent = '現在可以開鎖查看完整解法（仍建議先自行嘗試）。';
     }
@@ -718,20 +920,27 @@ async function aiRequest(requestUnlock){
       $('feedback').className = 'feedback ok show';
       $('feedback').textContent = '引導鏈可告一段落；可以開啟解法對照或返回主頁。';
     }
-    renderStep();
-    // Override self-rate for AI: send student reply then next
     wireAiAnswer(prompt);
   }catch(e){
-    var msg = String(e && e.message || e);
+    if(gen !== state.aiSeq) return;
+    settled = true;
+    clearInterval(waitTimer);
+    $('socraticCard').classList.remove('waiting');
+    $('socraticCard').setAttribute('aria-busy', 'false');
+    $('phaseLabel').textContent = '請稍候';
+    $('mainQ').textContent = '這一次未能取得提示。';
+    $('helpText').textContent = '可以再按「再給一點提示」，或返回主頁。';
     $('feedback').className = 'feedback bad show';
-    if(msg === 'no_api'){
-      $('feedback').textContent = '拍照引導暫時未能使用，請返回主頁使用示範題。';
-    }else{
-      $('feedback').textContent = '暫時未能完成：'+msg+'。可返回主頁改用示範題。';
-    }
+    $('feedback').textContent = studentFacingError(e && (e.code || e.name));
+    $('ansBox').classList.add('hidden');
     $('btnCheck').disabled = true;
+    $('btnHint').disabled = false;
+    $('btnSkip').disabled = false;
   }finally{
-    state.aiBusy = false;
+    clearInterval(waitTimer);
+    clearTimeout(kill);
+    if(state.aiAbort === ac) state.aiAbort = null;
+    if(gen === state.aiSeq) state.aiBusy = false;
   }
 }
 
@@ -800,6 +1009,9 @@ function renderProgress(){
 
 function renderStep(){
   var st = state.pack.steps[state.step];
+  $('socraticCard').classList.remove('waiting');
+  $('socraticCard').setAttribute('aria-busy', 'false');
+  $('ansBox').classList.remove('hidden');
   if(!st){
     $('phaseLabel').textContent = '完成';
     $('mainQ').textContent = '你已完成這條引導鏈。可以開啟解法對照，或者返回主頁再選一題。';
@@ -819,8 +1031,13 @@ function renderStep(){
   $('btnSkip').disabled = false;
   state.hintLevel = 0;
   $('phaseLabel').textContent = st.phase;
-  $('mainQ').textContent = st.q;
-  $('helpText').textContent = st.help || '';
+  if(state.mode === 'ai'){
+    setRichText($('mainQ'), st.q);
+    setRichText($('helpText'), st.help || '');
+  }else{
+    $('mainQ').textContent = st.q;
+    $('helpText').textContent = st.help || '';
+  }
   $('feedback').className = 'feedback';
   $('feedback').textContent = '';
   var hb = $('hintLayers');
@@ -829,7 +1046,7 @@ function renderStep(){
     var div = document.createElement('div');
     div.className = 'hint-layer';
     div.id = 'hint'+i;
-    div.innerHTML = '<strong>提示 '+(i+1)+'：</strong> '+escapeHtml(h);
+    div.innerHTML = '<strong>提示 '+(i+1)+'：</strong> ' + (state.mode === 'ai' ? mixedToHtml(h) : escapeHtml(h));
     hb.appendChild(div);
   });
   var box = $('ansBox');
@@ -894,7 +1111,10 @@ function revealNextHint(){
   if(!st || !st.hints) return;
   if(state.hintLevel < st.hints.length){
     var el = $('hint'+state.hintLevel);
-    if(el) el.classList.add('show');
+    if(el){
+      el.classList.add('show');
+      renderMath(el);
+    }
     state.hintLevel++;
   }else{
     $('feedback').className = 'feedback info show';
@@ -915,21 +1135,115 @@ function unlockSolution(){
   renderMath($('solutionBody'));
 }
 
-/* Photo */
+/* Photo: shrink before upload so the request and vision step are smaller. */
+var PHOTO_MAX_EDGE = 1800;
+var PHOTO_JPEG_QUALITY = 0.8;
+var photoTicket = 0;
+
+function targetSize(w, h, maxEdge){
+  var longEdge = Math.max(w || 0, h || 0);
+  var scale = longEdge > maxEdge ? maxEdge / longEdge : 1;
+  return {
+    w: Math.max(1, Math.round((w || 1) * scale)),
+    h: Math.max(1, Math.round((h || 1) * scale)),
+    scaled: scale < 1
+  };
+}
+function readFileAsDataUrl(file){
+  return new Promise(function(resolve, reject){
+    var reader = new FileReader();
+    reader.onload = function(){ resolve(String(reader.result || '')); };
+    reader.onerror = function(){ reject(reader.error || new Error('read')); };
+    reader.readAsDataURL(file);
+  });
+}
+async function loadBitmap(file){
+  if(typeof createImageBitmap === 'function'){
+    try{
+      return await createImageBitmap(file, {imageOrientation:'from-image'});
+    }catch(e){
+      try{ return await createImageBitmap(file); }catch(e2){}
+    }
+  }
+  return await new Promise(function(resolve, reject){
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function(){ URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('decode')); };
+    img.src = url;
+  });
+}
+async function preparePhoto(file){
+  var fallback = function(){
+    return readFileAsDataUrl(file).then(function(dataUrl){ return {dataUrl:dataUrl, shrunk:false}; });
+  };
+  var bitmap;
+  try{
+    bitmap = await loadBitmap(file);
+  }catch(e){
+    return fallback();
+  }
+  var w = bitmap.width || bitmap.naturalWidth;
+  var h = bitmap.height || bitmap.naturalHeight;
+  var size = targetSize(w, h, PHOTO_MAX_EDGE);
+  var smallFile = file.size && file.size <= 500000;
+  if(!size.scaled && smallFile){
+    if(bitmap.close) bitmap.close();
+    return fallback();
+  }
+  try{
+    var canvas = document.createElement('canvas');
+    canvas.width = size.w;
+    canvas.height = size.h;
+    var ctx = canvas.getContext('2d', {alpha:false});
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size.w, size.h);
+    ctx.drawImage(bitmap, 0, 0, size.w, size.h);
+    if(bitmap.close) bitmap.close();
+    var blob = await new Promise(function(resolve){
+      if(canvas.toBlob) canvas.toBlob(resolve, 'image/jpeg', PHOTO_JPEG_QUALITY);
+      else resolve(null);
+    });
+    if(!blob) return fallback();
+    if(!size.scaled && blob.size >= file.size) return fallback();
+    var dataUrl = await readFileAsDataUrl(blob);
+    return {dataUrl:dataUrl, shrunk:true};
+  }catch(e){
+    if(bitmap && bitmap.close){ try{ bitmap.close(); }catch(err){} }
+    return fallback();
+  }
+}
 function handleFile(file){
   if(!file || !file.type || file.type.indexOf('image/')!==0) return;
+  var ticket = ++photoTicket;
   state.photoMime = file.type;
-  var reader = new FileReader();
-  reader.onload = function(e){
-    state.photoData = e.target.result;
+  state.photoData = null;
+  $('photoMsg').textContent = '正在準備相片…';
+  $('photoMsg').className = 'api-status note';
+  var ready = preparePhoto(file).then(function(result){
+    if(ticket !== photoTicket) return;
+    state.photoData = result.dataUrl;
+    var parts = dataUrlParts(result.dataUrl);
+    state.photoMime = parts.mime || file.type || 'image/jpeg';
     $('photoPreview').classList.add('show');
     $('photoImg').src = state.photoData;
-    $('photoMsg').textContent = getApiBase()
-      ? '已預覽。可以按「拍照引導」。'
-      : '已預覽。拍照引導未就緒時會看到說明。';
+    if(state.photoData.length > 5000000){
+      $('photoMsg').textContent = '相片仍然太大，請裁切題目或改用較小的 JPG。';
+      $('photoMsg').className = 'api-status banner err';
+      return;
+    }
+    $('photoMsg').textContent = result.shrunk
+      ? '已預覽。相片已縮小，以便更快得到提示。可以按「拍照引導」。'
+      : (getApiBase() ? '已預覽。可以按「拍照引導」。' : '已預覽。拍照引導未就緒時會看到說明。');
     $('photoMsg').className = 'api-status note';
-  };
-  reader.readAsDataURL(file);
+  }).catch(function(){
+    if(ticket !== photoTicket) return;
+    state.photoData = null;
+    $('photoMsg').textContent = '未能讀取這張相片，請改用 JPG 或 PNG。';
+    $('photoMsg').className = 'api-status banner err';
+  });
+  state.photoReady = ready;
+  return ready;
 }
 
 /* Wire */
@@ -940,8 +1254,10 @@ $('btnStartCustom').addEventListener('click', startCustom);
 $('btnStartPhoto').addEventListener('click', function(){ startPhoto(); });
 $('btnClearCustom').addEventListener('click', function(){
   $('pasteText').value='';
+  photoTicket++;
   state.photoData=null;
   state.photoMime=null;
+  state.photoReady=null;
   $('photoPreview').classList.remove('show');
   $('photoImg').removeAttribute('src');
   $('photoInput').value='';
@@ -949,7 +1265,14 @@ $('btnClearCustom').addEventListener('click', function(){
   $('photoMsg').textContent='';
   $('photoMsg').className='api-status note';
 });
-$('btnBack').addEventListener('click', function(){ showScreen('home'); });
+$('btnBack').addEventListener('click', function(){
+  state.aiSeq++;
+  state.aiBusy = false;
+  state.photoStarting = false;
+  if(state.aiAbort) state.aiAbort.abort();
+  $('socraticCard').classList.remove('waiting');
+  showScreen('home');
+});
 $('btnCheck').addEventListener('click', checkAnswer);
 $('btnHint').addEventListener('click', function(){
   if(state.mode==='ai'){
@@ -999,6 +1322,191 @@ document.addEventListener('keydown', function(e){
     if(t && t.id==='ansInput' && t.tagName==='INPUT'){ e.preventDefault(); checkAnswer(); }
   }
 });
+
+function runSelfTest(){
+  var params = new URLSearchParams(location.search);
+  var mode = params.get('selftest');
+  if(mode === 'demo'){
+    startDemo('quad');
+    return;
+  }
+  if(mode === 'wait'){
+    state.mode = 'ai';
+    state.history = [];
+    state.family = {id:'ai', label:'拍照引導'};
+    state.pack = {problemHtml:'<p class="note">（以相片為主）</p>', solutionHtml:'<p></p>', steps:[{phase:'ELICIT', q:'', help:'', type:'self', hints:[]}], title:''};
+    resetTutor();
+    renderWaiting(9);
+    return;
+  }
+  if(mode === 'card'){
+    state.mode = 'ai';
+    state.history = [];
+    state.family = {id:'ai', label:'拍照 AI'};
+    state.step = 0;
+    state.fails = 0;
+    state.pack = {
+      problemHtml: '<p class="note">（以相片為主；可在下方補充文字）</p>',
+      solutionHtml: '<p>完整解法預設隱藏。</p>',
+      steps: [{
+        phase: 'ELICIT',
+        q: '我們先看 (a) 部分。題目給出 $A(n) = 4n - 5$。請問數列 $A(1), A(2), A(3), \\dots$ 是甚麼類型的數列（等差數列還是等比數列）？它的首項和公差（或公比）分別是多少？',
+        help: '策略提示：可以先試代入 $n=1, 2, 3$ 計算前幾項，看看相鄰兩項的差或比有甚麼規律。',
+        type: 'self',
+        hints: ['代入 $n=1, 2, 3$，看相鄰差。'],
+        strategy: ''
+      }],
+      title: '拍照引導'
+    };
+    resetTutor();
+    return;
+  }
+  if(mode !== '1') return;
+  var results = [];
+  function check(name, cond){ results.push((cond ? 'PASS ' : 'FAIL ') + name); }
+  try{
+    var sample = '我們先看 (a) 部分。題目給出 $A(n) = 4n - 5$。請問數列 $A(1), A(2), A(3), \\dots$ 是甚麼類型的數列？';
+    var html = mixedToHtml(sample);
+    check('inline span', html.indexOf('data-tex="A(n) = 4n - 5"') !== -1);
+    check('dots span', html.indexOf('data-tex="A(1), A(2), A(3), \\dots"') !== -1);
+    check('raw dollar removed', html.indexOf('$A(n)') === -1);
+    var host = document.createElement('div');
+    host.id = 'mathProbe';
+    host.innerHTML = html;
+    document.body.appendChild(host);
+    renderMath(host);
+    check('katex node', !!host.querySelector('.katex'));
+    check('probe text has no $A(n)', host.textContent.indexOf('$A(n)') === -1);
+    check('probe shows A(n)', host.textContent.indexOf('A(n)') !== -1);
+
+    var displayHtml = mixedToHtml('公式 $$\\dfrac{-b\\pm\\sqrt{\\Delta}}{2a}$$ 完');
+    check('display flag', displayHtml.indexOf('data-display="1"') !== -1 && displayHtml.indexOf('\\dfrac') !== -1);
+    var parenHtml = mixedToHtml('行內 \\(x^{2}\\) 完畢');
+    check('paren math', parenHtml.indexOf('data-tex="x^{2}"') !== -1);
+    var bracketHtml = mixedToHtml('展示 \\[a^{2}\\] 完');
+    check('bracket math', bracketHtml.indexOf('data-display="1"') !== -1);
+    check('unclosed dollar', mixedToHtml('約 $5 元').indexOf('$5') !== -1);
+    check('escaped dollar', mixedToHtml('價錢 \\$5').indexOf('$') !== -1);
+    var xss = mixedToHtml('<' + 'script>alert(1)<' + '/script> $x$');
+    check('script escaped', xss.indexOf('<' + 'script>') === -1 && xss.indexOf('data-tex="x"') !== -1);
+    var broken = mixedToHtml('壞掉 $\\frac{$ 尾');
+    check('invalid latex kept', broken.indexOf('$\\frac{$') !== -1 || broken.indexOf('$') !== -1);
+
+    var size = targetSize(4000, 3000, 1800);
+    check('resize long edge', size.w === 1800 && size.h === 1350 && size.scaled);
+    var small = targetSize(800, 600, 1800);
+    check('keep small photo', small.w === 800 && small.h === 600 && !small.scaled);
+
+    check('error hides upstream', studentFacingError('upstream_http') === '暫時未能完成，請稍後再試，或返回主頁改用示範題。');
+    check('timeout copy', studentFacingError('upstream_timeout') === '等候太久，請再試一次。');
+    check('no api copy', studentFacingError('no_api') === '拍照引導暫時未能使用，請返回主頁使用示範題。');
+
+    startDemo('quad');
+    check('demo katex', !!$('probText').querySelector('.katex'));
+    check('demo question text', $('mainQ').textContent.indexOf('標準形') !== -1);
+    check('demo question not katex', !$('mainQ').querySelector('.katex'));
+
+    state.mode = 'ai';
+    state.history = [];
+    state.family = {id:'ai', label:'拍照引導'};
+    state.step = 0;
+    state.fails = 0;
+    state.pack = {
+      problemHtml: '<p class="note">（以相片為主）</p>',
+      solutionHtml: '<p>隱藏</p>',
+      steps: [{
+        phase: 'ELICIT',
+        q: sample + '它的首項和公差（或公比）分別是多少？',
+        help: '策略提示：可以先試代入 $n=1, 2, 3$ 計算前幾項，看看相鄰兩項的差或比有甚麼規律。',
+        type: 'self',
+        hints: ['代入 $n=1, 2, 3$，看相鄰差。'],
+        strategy: ''
+      }],
+      title: '拍照引導'
+    };
+    renderStep();
+    revealNextHint();
+    check('card katex', !!$('mainQ').querySelector('.katex'));
+    check('card no raw prompt', $('mainQ').textContent.indexOf('$A(n)') === -1 && $('mainQ').textContent.indexOf('$A(1)') === -1);
+    check('card shows formula', $('mainQ').textContent.indexOf('A(n)') !== -1 && $('mainQ').textContent.indexOf('4n') !== -1);
+    check('help katex', !!$('helpText').querySelector('.katex'));
+    check('help no raw', $('helpText').textContent.indexOf('$n=1') === -1 && $('helpText').textContent.indexOf('n=1') !== -1);
+    var hint = $('hint0');
+    check('hint katex', !!(hint && hint.classList.contains('show') && hint.querySelector('.katex')));
+    check('hint no raw', hint && hint.textContent.indexOf('$n=1') === -1);
+
+    renderWaiting(0);
+    check('wait title', $('mainQ').textContent === '正在閱讀題目…');
+    check('wait hides answer', $('ansBox').classList.contains('hidden'));
+    check('wait spinner class', $('socraticCard').classList.contains('waiting'));
+    state.history = [{role:'assistant', content:'上一則'}];
+    renderWaiting(9);
+    check('followup wait', $('mainQ').textContent === '仍在整理這一條提示…' && $('helpText').textContent.indexOf('9') !== -1);
+    renderWaiting(21);
+    check('long wait', $('mainQ').textContent === '請再稍候…');
+    state.history = [];
+    $('modePill').textContent = '拍照 AI';
+    $('familyLabel').textContent = ' · 拍照 AI';
+    $('probText').innerHTML = '<p class="note">（以相片為主；可在下方補充文字）</p>';
+    var probe = document.getElementById('mathProbe');
+    if(probe) probe.remove();
+    renderStep();
+  }catch(err){
+    results.push('FAIL exception ' + (err && err.message ? err.message : err));
+  }
+  var pre = document.createElement('pre');
+  pre.id = 'selftestResult';
+  pre.setAttribute('hidden', '');
+  pre.textContent = results.join('\n');
+  document.body.appendChild(pre);
+  var failed = results.filter(function(r){ return r.indexOf('FAIL') === 0; }).length;
+  document.title = failed ? ('FAIL ' + failed) : 'PASS';
+  if(failed === 0){
+    verifyPhotoShrink().then(function(line){
+      var box = document.getElementById('selftestResult');
+      if(box) box.textContent += '\n' + line;
+      document.documentElement.dataset.photo = line;
+      if(line.indexOf('FAIL') === 0) document.title = 'FAIL photo';
+    }).catch(function(err){
+      var line = 'FAIL photo ' + (err && err.message ? err.message : err);
+      document.documentElement.dataset.photo = line;
+      document.title = 'FAIL photo';
+    });
+  }
+}
+function canvasJpeg(w, h){
+  var canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  var ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = '#222';
+  ctx.font = '48px sans-serif';
+  ctx.fillText('A(n)=4n-5', 24, 80);
+  return new Promise(function(resolve){ canvas.toBlob(resolve, 'image/jpeg', 0.92); });
+}
+function decodeEdge(dataUrl){
+  return new Promise(function(resolve, reject){
+    var img = new Image();
+    img.onload = function(){ resolve({w: img.naturalWidth, h: img.naturalHeight}); };
+    img.onerror = function(){ reject(new Error('decode')); };
+    img.src = dataUrl;
+  });
+}
+async function verifyPhotoShrink(){
+  var bigBlob = await canvasJpeg(2400, 1600);
+  var big = await preparePhoto(new File([bigBlob], 'big.jpg', {type:'image/jpeg'}));
+  var bigSize = await decodeEdge(big.dataUrl);
+  var smallBlob = await canvasJpeg(400, 300);
+  var small = await preparePhoto(new File([smallBlob], 'small.jpg', {type:'image/jpeg'}));
+  var smallSize = await decodeEdge(small.dataUrl);
+  var bigOk = big.shrunk && bigSize.w === 1800 && bigSize.h === 1200 && big.dataUrl.indexOf('data:image/jpeg') === 0;
+  var smallOk = !small.shrunk && smallSize.w === 400 && smallSize.h === 300;
+  if(bigOk && smallOk) return 'PASS photo shrink';
+  return 'FAIL photo shrink big=' + bigSize.w + 'x' + bigSize.h + ' shrunk=' + big.shrunk + ' small=' + smallSize.w + 'x' + smallSize.h + ' shrunk=' + small.shrunk;
+}
+runSelfTest();
 
 })();
 </script>
