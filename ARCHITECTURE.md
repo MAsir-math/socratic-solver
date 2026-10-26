@@ -17,8 +17,8 @@
 [Gemini Vision API]
 ```
 
-- **Frontend**：`index.html`（Pages）。示範題標「示範模式（唔睇圖）」— 純本地腳本。影相模式只呼叫 API，失敗就誠實報「後端未接上」，**唔會**用關鍵字假裝睇圖。
-- **Backend**：`worker/` Cloudflare Worker（亦可以改寫成 Vercel `api/socratic.ts`，合約相同）。
+- **Frontend**：`index.html`（Pages，由 `src/app.html` 經 `python3 src/build.py` 產生）。示範題用本地腳本，公式用內嵌 KaTeX。影相模式只呼叫 API。AI 回傳嘅 `nextPrompt`／`strategyHint` 若含 `$...$`、`$$...$$`、`\(...\)` 或 `\[...\]`，前端會轉成 KaTeX；不合法或未閉合嘅 `$` 保持原文。上載前先把相片長邊縮到約 1800px。失敗就誠實報未能使用，**唔會**用關鍵字假裝睇圖，亦**唔會**把上游錯誤正文顯示俾學生。
+- **Backend**：`worker/` Cloudflare Worker（亦可以改寫成 Vercel `api/socratic.ts`，合約相同）。模型 id 維持 `gemini-3.8-flash`，`thinkingLevel` 預設 `low`（可用 `GEMINI_THINKING` 覆寫）。
 
 ## API 合約 `POST /api/socratic`
 
@@ -68,7 +68,7 @@
 2. 或 `<meta name="socratic-api" content="https://….workers.dev">`
 3. 或同域 `/api/socratic`（若用 Pages+Functions／反向代理）
 
-而家 Pages 純靜態：要填 Worker URL 先至影相 AI 用得。
+`src/app.html` 的 meta 而家指向 `https://socratic-solver-api.pages.dev`。Pages 仍然係靜態頁；影相請求去該 Worker。Key 只放 Worker secret。
 
 ## 馬Sir 要提供／做嘅事
 
@@ -77,4 +77,4 @@
 3. 按 README「部署後端」步驟：`wrangler login` → `secret put` → `deploy`
 4. 把 Worker URL 填入前端 meta／環境後重新發布靜態頁（或設 Pages 自訂）
 
-未完成後端前，公開站只係 **UI＋示範模式**，橫額會寫明。
+若 meta 冇 API 網址，主頁橫額會叫學生先用示範題。有網址但 Worker 未設 Key 或暫時失敗時，影相引導顯示一般錯誤，唔暴露模型名或秘密。

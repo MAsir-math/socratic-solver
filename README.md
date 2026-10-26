@@ -9,7 +9,7 @@
 
 https://masir-math.github.io/socratic-solver/
 
-（試版橫額會寫明：**AI 睇圖未開**，直至 Worker URL 填入前端 meta。）
+前端 meta 已指向 `https://socratic-solver-api.pages.dev`。有呢個網址時，主頁唔再顯示「未接上」橫額；影相會呼叫 Worker。Key 仍然只喺 Cloudflare，唔會出現喺頁面。
 
 ## 兩條路徑
 
@@ -28,7 +28,7 @@ https://masir-math.github.io/socratic-solver/
 3. 一次一條主問題；可「再提示一下」  
 4. 完整解法預設隱藏（「我試完先睇」或多次失敗後）
 
-唔收集姓名／成績；示範題離線都用得（KaTeX 已內嵌）。
+唔收集姓名／成績；示範題離線都用得（KaTeX 已內嵌）。影相提示入面嘅 `$...$`／`$$...$$` 亦用同一套 KaTeX 顯示，唔會見到原始美元符號。
 
 ## 馬Sir 要提供先至開到影相 AI
 
@@ -57,7 +57,10 @@ npx wrangler deploy
 - 合約：`POST /api/socratic`（見 ARCHITECTURE.md）  
 - **公開 repo 零秘密**；`worker/` 源碼可以放同一 repo，但唔好把 `.env`／secret 推進去
 
-部署後：把 Worker URL 填入 `src/app.html` 的 meta → `python3 src/build.py` → 再更新 GitHub Pages。
+部署後：把 Worker URL 填入 `src/app.html` 的 meta → `python3 src/build.py` → 再更新 GitHub Pages。  
+`src/build.py` 用 `src/vendor/` 入面已內嵌字型嘅 KaTeX；舊路徑 `/workspace/definite-integral/vendor/katex` 仍然可以作後備。
+
+Worker 要再 `npx wrangler deploy` 一次，思考量先會改為 `low`（模型 id 仍然係 `gemini-3.8-flash`）。未 redeploy 之前，頁面嘅公式顯示同相片縮小已經生效。
 
 ## 本機預覽
 
@@ -74,9 +77,17 @@ python3 -m http.server 8766
 建議發布：`index.html`、`README.md`、`ARCHITECTURE.md`、`.nojekyll`，以及 **`worker/` 源碼**（無 secret）。  
 唔發布：任何 Key、`.env`、本機 `.github-pages-publisher.json`（可留喺專案根目錄作更新紀錄）。
 
+## 速度
+
+- 上載前把相片長邊縮到約 1800px、轉成 JPEG，再送去 Worker（細圖就保持原檔）。
+- 等候時引導卡會顯示進度同已等候秒數；返回主頁會取消未完成嘅請求。
+- Worker 對 `gemini-3.8-flash` 設 `thinkingLevel: low`（預設係 medium，會拖慢一條提示）。輸出上限放到 4096，避免思考 token 截斷 JSON。可用環境變數 `GEMINI_THINKING` 覆寫；唔好設 `minimal`（呢個模型會拒絕）。
+- 上游錯誤唔再把回應正文傳去瀏覽器，避免錯誤訊息帶出網址或秘密。
+
 ## 已知限制（試版）
 
-- 公開站而家係 **UI＋示範模式**；影相 AI **未開**直至 Worker＋Key＋meta URL 齊  
+- 影相引導需要已部署、並且設好 `GEMINI_API_KEY` 嘅 Worker。未接上時會老實話未能使用，唔會用關鍵字假裝睇圖  
 - 自訂「文字本地」完整解法係通用說明，唔會自動寫你條題嘅數式答案  
 - 示範題自動改卷靠關鍵字／數值，寫法太怪可能判錯  
-- 相片經 Worker 轉去 Gemini 時短暫處理；Worker 唔做長期儲存／記分
+- 相片經 Worker 轉去 Gemini 時短暫處理；Worker 唔做長期儲存／記分  
+- 學生頁面唔顯示模型名稱、網址或 Key

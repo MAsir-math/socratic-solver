@@ -21,7 +21,8 @@ const SYSTEM = `你是香港中學文憑試（HKDSE）數學科【必修部分�
 6. 不要收集或要求姓名、班別、學號。
 7. 若相片／題目不清晰，或明顯超出 DSE 數學必修／M1／M2 範圍（例如大學高等數學、非數學科），請如實說明，並提出一條澄清問題，勿硬套錯誤課程內容。
 8. 回傳必須是嚴格 JSON（不要用 markdown 圍欄），格式：
-{"phase":"ELICIT|PROBE|GUIDE|SYNTH","nextPrompt":"...","strategyHint":null或字串,"allowUnlock":false,"done":false}`;
+{"phase":"ELICIT|PROBE|GUIDE|SYNTH","nextPrompt":"...","strategyHint":null或字串,"allowUnlock":false,"done":false}
+9. 數學式用 LaTeX：行內 $...$，需要獨立成行才用 $$...$$。不要用程式碼塊，不要把 $ 當作貨幣符號。nextPrompt 只留一條問題；strategyHint 同樣可以用 $...$。`;
 
 function corsHeaders(origin, allow) {
   const ok = !allow || allow === '*' || (origin && origin.startsWith(allow.replace(/\/$/, '')))
@@ -39,9 +40,27 @@ function corsHeaders(origin, allow) {
 function json(data, status, cors) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json; charset=utf-8', ...cors },
+    headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...cors },
   });
 }
+
+function generationConfig(env) {
+  // gemini-3.8-flash defaults to thinkingLevel "medium", which delays a one-hint reply.
+  // "low" is the supported latency setting; "minimal" is rejected on this model.
+  // Do not lower maxOutputTokens to chase speed: the cap includes thinking tokens.
+  const level = String(env.GEMINI_THINKING || 'low').trim();
+  const config = {
+    temperature: 0.4,
+    maxOutputTokens: 4096,
+    responseMimeType: 'application/json',
+  };
+  if (level && level !== 'default') {
+    config.thinkingConfig = { thinkingLevel: level };
+  }
+  return config;
+}
+
+export { generationConfig };
 
 export default {
   async fetch(request, env) {
@@ -109,38 +128,55 @@ export default {
     const model = env.GEMINI_MODEL || 'gemini-3.8-flash';
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`;
 
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), 55000);
     let geminiRes;
     try {
       geminiRes = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: ac.signal,
         body: JSON.stringify({
           system_instruction: { parts: [{ text: SYSTEM }] },
           contents: [{ role: 'user', parts }],
-          generationConfig: {
-            temperature: 0.4,
-            maxOutputTokens: 1024,
-            responseMimeType: 'application/json',
-          },
+          generationConfig: generationConfig(env),
         }),
       });
     } catch (e) {
-      return json({ ok: false, error: 'upstream_network', message: String(e) }, 502, cors);
+      const timedOut = e && (e.name === 'AbortError' || e.name === 'TimeoutError');
+      return json({
+        ok: false,
+        error: timedOut ? 'upstream_timeout' : 'upstream_network',
+        message: '暫時未能讀取題目，請再試一次。',
+      }, 502, cors);
+    } finally {
+      clearTimeout(timer);
     }
 
     if (!geminiRes.ok) {
-      const errText = await geminiRes.text();
+      try { await geminiRes.body?.cancel(); } catch { /* ignore unread upstream body */ }
       return json({
         ok: false,
         error: 'upstream_http',
-        status: geminiRes.status,
-        message: errText.slice(0, 500),
+        message: '暫時未能讀取題目，請再試一次。',
       }, 502, cors);
     }
 
-    const data = await geminiRes.json();
+    let data;
+    try {
+      data = await geminiRes.json();
+    } catch {
+      return json({
+        ok: false,
+        error: 'bad_model_json',
+        message: '暫時未能產生提示，請再試一次。',
+      }, 502, cors);
+    }
     const raw =
-      data?.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('') || '';
+      (data?.candidates?.[0]?.content?.parts || [])
+        .filter((p) => p && !p.thought && p.text)
+        .map((p) => p.text)
+        .join('') || '';
 
     let parsed;
     try {
@@ -159,8 +195,7 @@ export default {
       return json({
         ok: false,
         error: 'bad_model_json',
-        message: '模型回傳格式不正確',
-        raw: raw.slice(0, 400),
+        message: '暫時未能產生提示，請再試一次。',
       }, 502, cors);
     }
 
