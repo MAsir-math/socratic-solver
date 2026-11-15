@@ -30,7 +30,13 @@ https://masir-math.github.io/socratic-solver/
 3. 有自己的題：上載相片 → 拍照引導 → 寫想法 → 下一提示  
 4. 完整解法預設隱藏  
 
-唔收集姓名／成績。
+唔收集姓名／成績；**Google 帳戶登入留到 M2**，M1 唔做。
+
+## 點樣試（可唔使入 GitHub）
+
+- **M1 驗收**：喺 Cursor 預覽或本機 `http.server` 試就得；示範題離線可用。
+- **唔使**為咗試用而去 GitHub 合併 PR。
+- 正式站（上面公開網址）要見到最新改動，先至需要合併進 `main`；到時可喺 Cursor 叫 Agent 代做。
 
 ## 馬Sir 要提供先至開到影相 AI
 
@@ -75,4 +81,4 @@ python3 -m http.server 8766
 - 示範題改卷靠關鍵字，怪寫法可能判錯  
 - 相片只短暫轉交，唔做長期儲存／記分  
 - 學生頁唔顯示模型名稱或 Key  
-- 用量限制、正式上線回滾屬 **M2**（見 MILESTONES.md）
+- 用量限制、正式上線回滾、**Google 帳戶登入**屬 **M2**（見 MILESTONES.md）
