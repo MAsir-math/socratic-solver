@@ -148,10 +148,10 @@ footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center
 
     <section class="card" id="studentIntro" style="margin-bottom:14px">
       <h2>本網站使用說明</h2>
-      <p class="note">這裏是<strong>蘇格拉底解題引導</strong>：拍照或貼上題目後，每次會給你<strong>一條提示／問題</strong>，幫助你自行思考，而不是一次給出完整答案。引導內容以香港中學文憑試（DSE）數學<strong>必修部分</strong>及<strong>延伸部分（M1／M2）</strong>課程為依據，並以繁體中文書面語呈現。適合課堂練習與家中溫習；不會收集姓名與成績。</p>
+      <p class="note">這裏是<strong>蘇格拉底解題引導</strong>：拍照或貼上題目後，每次會給你<strong>一條提示／問題</strong>，幫助你自行思考，而不是一次給出完整答案。引導以香港 DSE 數學為依據，並以繁體中文書面語呈現。適合課堂練習與家中溫習；不會收集姓名與成績。</p>
       <ol class="note" style="margin:10px 0 0 1.2em;padding:0;line-height:1.65">
-        <li><strong>想先熟悉流程：</strong>點選左邊一條<strong>示範題</strong>，接著回答每條提示。</li>
-        <li><strong>有自己的題目：</strong>在右邊上載題目相片（可再貼上少許文字）→ 按<strong>拍照引導</strong>。</li>
+        <li><strong>第一次使用：</strong>先點左邊一條<strong>示範題</strong>，走完一輪提示（不必上網也能用）。</li>
+        <li><strong>有自己的題目：</strong>右邊上載題目相片 → 按<strong>拍照引導</strong> → 寫下一句想法 → 再取下一條提示。</li>
         <li><strong>只有文字、沒有相片：</strong>在文字框貼上題目 → 按<strong>開始引導</strong>。</li>
         <li>卡住時可以索取更細的提示；完整解法預設收起，試過之後再開啟。</li>
       </ol>
@@ -176,6 +176,7 @@ footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center
           <button type="button" class="btn primary" id="btnStartPhoto">拍照引導</button>
           <button type="button" class="btn ghost" id="btnClearCustom">清除</button>
         </div>
+        <p class="api-status note" id="photoReady"></p>
         <p class="api-status note" id="photoMsg"></p>
         <h3>或者：直接貼上題文（無需相片）</h3>
         <textarea id="pasteText" rows="5" placeholder="例如：解方程 x^2 - 5x + 6 = 0"></textarea>
@@ -212,7 +213,7 @@ footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center
           <p class="q" id="mainQ" aria-live="polite"></p>
           <p class="help" id="helpText"></p>
           <div class="ans-box" id="ansBox"></div>
-          <div class="row">
+          <div class="row" id="tutorActions">
             <button type="button" class="btn primary" id="btnCheck">提交</button>
             <button type="button" class="btn hint" id="btnHint">再給一點提示</button>
             <button type="button" class="btn ghost" id="btnSkip">我答不到，下一關</button>
@@ -664,6 +665,42 @@ function refreshApiBanner(){
     b.className = 'banner warn';
     b.innerHTML = '<strong>小提示：</strong>請先用左邊<strong>示範題</strong>練習。拍照／貼題稍後再用。';
   }
+  refreshPhotoReady();
+}
+
+function refreshPhotoReady(){
+  var el = $('photoReady');
+  if(!el) return;
+  var base = getApiBase();
+  if(!base){
+    el.textContent = '拍照引導暫未就緒：請先用左邊示範題。';
+    el.className = 'api-status note';
+    return;
+  }
+  el.textContent = '正在檢查拍照引導…';
+  el.className = 'api-status note';
+  var ctrl = new AbortController();
+  var kill = setTimeout(function(){ ctrl.abort(); }, 8000);
+  fetch(base + '/api/health', { method:'GET', signal: ctrl.signal })
+    .then(function(res){ return res.json().then(function(data){ return {ok:res.ok, data:data}; }); })
+    .then(function(r){
+      clearTimeout(kill);
+      if(r.ok && r.data && r.data.ok && r.data.hasKey){
+        el.textContent = '拍照引導已就緒。可上載清楚題目相片再開始。';
+        el.className = 'api-status note';
+      }else if(r.ok && r.data && r.data.ok){
+        el.textContent = '拍照引導暫時未能使用，請先用示範題。';
+        el.className = 'api-status banner warn';
+      }else{
+        el.textContent = '拍照引導暫時未能使用，請先用示範題。';
+        el.className = 'api-status banner warn';
+      }
+    })
+    .catch(function(){
+      clearTimeout(kill);
+      el.textContent = '拍照引導暫時未能連上，請先用示範題，稍後再試。';
+      el.className = 'api-status banner warn';
+    });
 }
 
 function getApiBase(){
@@ -820,7 +857,7 @@ async function startPhoto(){
     }
     var text = $('pasteText').value.trim();
     state.mode = 'ai';
-    state.family = {id:'ai', label:'拍照 AI'};
+    state.family = {id:'ai', label:'拍照引導'};
     state.history = [];
     state.fails = 0;
     state.unlocked = false;
@@ -863,6 +900,7 @@ function renderWaiting(seconds){
   $('btnCheck').disabled = true;
   $('btnHint').disabled = true;
   $('btnSkip').disabled = true;
+  setTutorActionsVisible(state.mode !== 'ai');
   var waitingInput = $('ansInput');
   if(waitingInput && document.activeElement === waitingInput) waitingInput.blur();
 }
@@ -927,15 +965,23 @@ async function aiRequest(requestUnlock){
     clearInterval(waitTimer);
     $('socraticCard').classList.remove('waiting');
     $('socraticCard').setAttribute('aria-busy', 'false');
-    $('phaseLabel').textContent = '請稍候';
+    $('phaseLabel').textContent = '未能完成';
     $('mainQ').textContent = '這一次未能取得提示。';
-    $('helpText').textContent = '可以再按「再給一點提示」，或返回主頁。';
+    $('helpText').textContent = '可以再試一次，或返回主頁改用示範題。';
     $('feedback').className = 'feedback bad show';
     $('feedback').textContent = studentFacingError(e && (e.code || e.name));
-    $('ansBox').classList.add('hidden');
+    $('ansBox').classList.remove('hidden');
+    $('ansBox').innerHTML = '<div class="self-rate">'+
+      '<button type="button" class="btn primary" id="btnRetryAi">再試一次</button>'+
+      '<button type="button" class="btn ghost" id="btnBackHomeFail">返回主頁</button></div>';
+    setTutorActionsVisible(false);
     $('btnCheck').disabled = true;
-    $('btnHint').disabled = false;
-    $('btnSkip').disabled = false;
+    $('btnHint').disabled = true;
+    $('btnSkip').disabled = true;
+    var retry = $('btnRetryAi');
+    if(retry) retry.onclick = function(){ aiRequest(false); };
+    var backHome = $('btnBackHomeFail');
+    if(backHome) backHome.onclick = function(){ showScreen('home'); };
   }finally{
     clearInterval(waitTimer);
     clearTimeout(kill);
@@ -945,6 +991,11 @@ async function aiRequest(requestUnlock){
 }
 
 function wireAiAnswer(lastPrompt){
+  setTutorActionsVisible(false);
+  var lockNote = $('lockBox') && $('lockBox').querySelector('.note');
+  if(lockNote){
+    lockNote.textContent = '請先自行嘗試。拍照引導不會一次給出完整答案；試過之後再開鎖對照關鍵一步。';
+  }
   var got = $('btnGotIt');
   var notyet = $('btnNotYet');
   if(got){
@@ -956,6 +1007,7 @@ function wireAiAnswer(lastPrompt){
     };
   }
   if(notyet){
+    notyet.textContent = '仍未 · 再提示';
     notyet.onclick = function(){
       state.fails++;
       renderProgress();
@@ -971,7 +1023,7 @@ function resetTutor(){
   state.fails = 0;
   state.hintLevel = 0;
   state.unlocked = false;
-  $('modePill').textContent = state.mode==='demo' ? '示範題' : (state.mode==='ai' ? '拍照 AI' : '文字引導');
+  $('modePill').textContent = state.mode==='demo' ? '示範題' : (state.mode==='ai' ? '拍照引導' : '文字引導');
   $('familyLabel').textContent = state.family ? (' · '+state.family.label) : '';
   $('probText').innerHTML = state.pack.problemHtml;
   renderMath($('probText'));
@@ -987,6 +1039,12 @@ function resetTutor(){
   renderMath($('solutionBody'));
   $('lockBox').classList.remove('hidden');
   $('btnUnlock').disabled = false;
+  var lockNote = $('lockBox') && $('lockBox').querySelector('.note');
+  if(lockNote){
+    lockNote.textContent = state.mode === 'ai'
+      ? '請先自行嘗試。拍照引導不會一次給出完整答案；試過之後再開鎖對照關鍵一步。'
+      : '請先自行嘗試。或者按下方開鎖（或同一關連續失敗 3 次後自動可開）。';
+  }
   showScreen('tutor');
   renderStep();
 }
@@ -1007,11 +1065,19 @@ function renderProgress(){
   if(state.fails>=3){ /* allow unlock visually */ }
 }
 
+function setTutorActionsVisible(show){
+  var row = $('tutorActions');
+  if(!row) return;
+  row.classList.toggle('hidden', !show);
+}
+
 function renderStep(){
   var st = state.pack.steps[state.step];
   $('socraticCard').classList.remove('waiting');
   $('socraticCard').setAttribute('aria-busy', 'false');
   $('ansBox').classList.remove('hidden');
+  var aiMode = state.mode === 'ai';
+  setTutorActionsVisible(!aiMode);
   if(!st){
     $('phaseLabel').textContent = '完成';
     $('mainQ').textContent = '你已完成這條引導鏈。可以開啟解法對照，或者返回主頁再選一題。';
@@ -1031,7 +1097,7 @@ function renderStep(){
   $('btnSkip').disabled = false;
   state.hintLevel = 0;
   $('phaseLabel').textContent = st.phase;
-  if(state.mode === 'ai'){
+  if(aiMode){
     setRichText($('mainQ'), st.q);
     setRichText($('helpText'), st.help || '');
   }else{
@@ -1046,16 +1112,18 @@ function renderStep(){
     var div = document.createElement('div');
     div.className = 'hint-layer';
     div.id = 'hint'+i;
-    div.innerHTML = '<strong>提示 '+(i+1)+'：</strong> ' + (state.mode === 'ai' ? mixedToHtml(h) : escapeHtml(h));
+    div.innerHTML = '<strong>提示 '+(i+1)+'：</strong> ' + (aiMode ? mixedToHtml(h) : escapeHtml(h));
     hb.appendChild(div);
   });
   var box = $('ansBox');
   if(st.type==='self'){
-    box.innerHTML = '<p class="note">本關不自動批改。可寫下你的想法（選填），再自評：</p>'+
+    box.innerHTML = '<p class="note">'+(aiMode
+      ? '寫下一句你的想法（選填），再取下一條提示。每次只會給一條提示，不會一次給出完整答案。'
+      : '本關不自動批改。可寫下你的想法（選填），再自評：')+'</p>'+
       '<textarea id="ansInput" rows="3" placeholder="可寫下你的想法…"></textarea>'+
       '<div class="self-rate">'+
-      '<button type="button" class="btn ok" id="btnGotIt">我答得到 → 下一關</button>'+
-      '<button type="button" class="btn warn" id="btnNotYet">仍未 · 再提示</button></div>';
+      '<button type="button" class="btn ok" id="btnGotIt">'+(aiMode ? '提交想法 → 下一提示' : '我答得到 → 下一關')+'</button>'+
+      '<button type="button" class="btn warn" id="btnNotYet">'+(aiMode ? '仍未 · 再提示' : '仍未 · 再提示')+'</button></div>';
     $('btnGotIt').onclick = function(){ advance(true); };
     $('btnNotYet').onclick = function(){ onWrong('再想一想；可以按「再給一點提示」。', true); };
   }else{
@@ -1342,7 +1410,7 @@ function runSelfTest(){
   if(mode === 'card'){
     state.mode = 'ai';
     state.history = [];
-    state.family = {id:'ai', label:'拍照 AI'};
+    state.family = {id:'ai', label:'拍照引導'};
     state.step = 0;
     state.fails = 0;
     state.pack = {
@@ -1445,12 +1513,16 @@ function runSelfTest(){
     renderWaiting(21);
     check('long wait', $('mainQ').textContent === '請再稍候…');
     state.history = [];
-    $('modePill').textContent = '拍照 AI';
-    $('familyLabel').textContent = ' · 拍照 AI';
+    $('modePill').textContent = '拍照引導';
+    $('familyLabel').textContent = ' · 拍照引導';
     $('probText').innerHTML = '<p class="note">（以相片為主；可在下方補充文字）</p>';
     var probe = document.getElementById('mathProbe');
     if(probe) probe.remove();
     renderStep();
+    wireAiAnswer(state.pack.steps[0].q);
+    check('ai hides demo actions', $('tutorActions').classList.contains('hidden'));
+    check('ai next label', $('btnGotIt') && $('btnGotIt').textContent.indexOf('下一提示') !== -1);
+    check('ai no model name', document.body.innerText.toLowerCase().indexOf('gem' + 'ini') === -1);
   }catch(err){
     results.push('FAIL exception ' + (err && err.message ? err.message : err));
   }
