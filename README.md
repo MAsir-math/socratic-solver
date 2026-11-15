@@ -34,9 +34,26 @@ https://masir-math.github.io/socratic-solver/
 
 ## 點樣試（可唔使入 GitHub）
 
-- **M1 驗收**：喺 Cursor 預覽或本機 `http.server` 試就得；示範題離線可用。
+- **M1 驗收**：用下面「右手邊即睇」最穩；示範題離線可用。
 - **唔使**為咗試用而去 GitHub 合併 PR。
-- 正式站（上面公開網址）要見到最新改動，先至需要合併進 `main`；到時可喺 Cursor 叫 Agent 代做。
+- 正式站要見到最新改動，先至需要合併進 `main`；到時可喺 Cursor 叫 Agent 代做。
+
+## 右手邊即睇（同監考系統）
+
+監考系統右手邊得，係因為 **dev server 喺你部電腦**（或 Ports 已轉發到本機）。  
+呢個 App 要同樣體驗，請用 **本機開資料夾**，唔好指望 Cloud Agent 嘅 `127.0.0.1` 直接出現喺右手邊。
+
+1. Cursor：**File → Open Folder** → 打開本機 `socratic-solver`
+2. 用 **本機 Agent／Terminal**（唔係 Cloud Agent）跑：
+
+```bash
+bash scripts/preview.sh
+```
+
+3. 右手邊 Simple Browser 開：`http://127.0.0.1:8766/`
+4. 改完 `src/app.html` 後再跑一次 `python3 src/build.py`，右手邊 **Refresh** 即見
+
+Cloud Agent 對話入面嘅右手邊連嘅係你部機；除非 Ports 插頭已轉發該 Agent 埠，否則會 `connection refused`。
 
 ## 馬Sir 要提供先至開到影相 AI
 
@@ -68,11 +85,10 @@ python3 src/build.py
 ## 本機預覽
 
 ```bash
-python3 src/build.py
-python3 -m http.server 8766
+bash scripts/preview.sh
 ```
 
-打開 http://127.0.0.1:8766/
+打開 http://127.0.0.1:8766/（建議用 Cursor 右手邊 Simple Browser）
 
 ## 已知限制
 
