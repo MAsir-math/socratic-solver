@@ -87,6 +87,8 @@ textarea:focus,input:focus{outline:2px solid #c5daf3;border-color:var(--brand2)}
 .settings .box{margin-top:8px;background:#fafbfd;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:.88rem}
 footer.foot{margin-top:18px;font-size:.8rem;color:var(--muted);text-align:center}
 .katex{font-size:1.05em}
+.demo-fig{display:block;width:min(100%,280px);height:auto;margin:12px auto 4px;background:#fff;border:1px solid var(--line);border-radius:10px}
+.demo-fig-caption{text-align:center;font-size:.78rem;color:var(--muted);margin:0 0 8px}
 .socratic .q,.socratic .help,.hint-layer{overflow-x:auto}
 .socratic .q .katex,.socratic .help .katex,.hint-layer .katex{font-weight:400}
 .katex-display{margin:.4em 0;overflow-x:auto;overflow-y:hidden}
@@ -469,7 +471,25 @@ var DEMOS = [
     meta:'中三／中四 · 圓',
     title:'圓心角與圓周角',
     snip:'∠AOB = 100°，求 ∠ACB',
-    problemHtml:'如圖，O 為圓心，A、B、C 在圓周上。若 '+mathSpan('\\angle AOB=100^\\circ')+'（劣弧 AB 所對），求 '+mathSpan('\\angle ACB')+'。',
+    problemHtml:'如圖，O 為圓心，A、B、C 在圓周上。若 '+mathSpan('\\angle AOB=100^\\circ')+'（劣弧 AB 所對），求 '+mathSpan('\\angle ACB')+'。'+
+      '<svg class="demo-fig" viewBox="0 0 280 260" role="img" aria-label="圓心 O，圓周上 A、B、C；圓心角 AOB 為 100 度，求圓周角 ACB">'+
+      '<circle cx="140" cy="130" r="88" fill="#f8fbff" stroke="#1e5a9c" stroke-width="2.5"/>'+
+      '<path d="M140 130 L72.4 185.6 A88 88 0 0 1 207.6 185.6 Z" fill="#d6e8f8" opacity=".85"/>'+
+      '<line x1="140" y1="130" x2="72.4" y2="185.6" stroke="#1e5a9c" stroke-width="2"/>'+
+      '<line x1="140" y1="130" x2="207.6" y2="185.6" stroke="#1e5a9c" stroke-width="2"/>'+
+      '<line x1="72.4" y1="185.6" x2="140" y2="42" stroke="#2a7acb" stroke-width="2"/>'+
+      '<line x1="207.6" y1="185.6" x2="140" y2="42" stroke="#2a7acb" stroke-width="2"/>'+
+      '<circle cx="140" cy="130" r="3.5" fill="#1a2332"/>'+
+      '<circle cx="72.4" cy="185.6" r="3.5" fill="#1a2332"/>'+
+      '<circle cx="207.6" cy="185.6" r="3.5" fill="#1a2332"/>'+
+      '<circle cx="140" cy="42" r="3.5" fill="#1a2332"/>'+
+      '<text x="148" y="128" font-size="16" font-family="Noto Sans TC,sans-serif" fill="#1a2332">O</text>'+
+      '<text x="52" y="205" font-size="16" font-family="Noto Sans TC,sans-serif" fill="#1a2332">A</text>'+
+      '<text x="214" y="205" font-size="16" font-family="Noto Sans TC,sans-serif" fill="#1a2332">B</text>'+
+      '<text x="132" y="30" font-size="16" font-family="Noto Sans TC,sans-serif" fill="#1a2332">C</text>'+
+      '<text x="118" y="168" font-size="13" font-family="Noto Sans TC,sans-serif" fill="#1e5a9c">100°</text>'+
+      '</svg>'+
+      '<p class="demo-fig-caption">圓心角 ∠AOB = 100°；求圓周角 ∠ACB</p>',
     solutionHtml:'<p>定理：同弧所對，圓心角是圓周角的兩倍。</p>'+
       '<p>弧 AB 所對圓心角 '+mathSpan('\\angle AOB=100^\\circ')+'，所對圓周角為 '+mathSpan('\\angle ACB')+'。</p>'+
       '<p>故 '+mathSpan('\\angle ACB=50^\\circ')+'。</p>',
@@ -1472,6 +1492,10 @@ function runSelfTest(){
     check('demo katex', !!$('probText').querySelector('.katex'));
     check('demo question text', $('mainQ').textContent.indexOf('標準形') !== -1);
     check('demo question not katex', !$('mainQ').querySelector('.katex'));
+    startDemo('circle');
+    check('circle figure', !!$('probText').querySelector('svg.demo-fig'));
+    check('circle labels', $('probText').textContent.indexOf('O') !== -1 && $('probText').textContent.indexOf('C') !== -1);
+    startDemo('quad');
 
     state.mode = 'ai';
     state.history = [];
